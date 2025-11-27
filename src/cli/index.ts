@@ -215,6 +215,8 @@ function parseConfig(options: any): DebateConfig {
 
 /**
  * Initializes available AI model providers based on CLI options and environment
+ * 
+ * API keys are loaded with precedence: CLI > Env > Config File
  */
 async function initializeModels(options: any): Promise<AIModelProvider[]> {
   const models: AIModelProvider[] = [];
@@ -232,11 +234,18 @@ async function initializeModels(options: any): Promise<AIModelProvider[]> {
     return models;
   }
   
+  // Load API keys from all sources (CLI > Env > File)
+  const configManager = new ConfigurationManager();
+  const cliAPIKeys = {
+    openaiApiKey: options.openaiKey,
+    anthropicApiKey: options.anthropicKey
+  };
+  const mergedAPIKeys = configManager.loadAndMergeAPIKeys(cliAPIKeys, options.config);
+  
   // Try to initialize OpenAI provider
-  const openaiKey = options.openaiKey || process.env.OPENAI_API_KEY;
-  if (openaiKey) {
+  if (mergedAPIKeys.openaiApiKey) {
     try {
-      const openaiProvider = new OpenAIProvider(openaiKey);
+      const openaiProvider = new OpenAIProvider({ apiKey: mergedAPIKeys.openaiApiKey });
       if (await openaiProvider.validateAvailability()) {
         models.push(openaiProvider);
       }
@@ -246,10 +255,9 @@ async function initializeModels(options: any): Promise<AIModelProvider[]> {
   }
   
   // Try to initialize Anthropic provider
-  const anthropicKey = options.anthropicKey || process.env.ANTHROPIC_API_KEY;
-  if (anthropicKey) {
+  if (mergedAPIKeys.anthropicApiKey) {
     try {
-      const anthropicProvider = new AnthropicProvider(anthropicKey);
+      const anthropicProvider = new AnthropicProvider({ apiKey: mergedAPIKeys.anthropicApiKey });
       if (await anthropicProvider.validateAvailability()) {
         models.push(anthropicProvider);
       }

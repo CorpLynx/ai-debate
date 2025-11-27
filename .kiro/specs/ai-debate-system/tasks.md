@@ -276,22 +276,22 @@
   - Verify all information is preserved
   - _Requirements: 8.3, 8.4_
 
-- [ ] 26. Add configuration file support
+- [x] 26. Add configuration file support
   - Support loading configuration from .debaterc file
   - Support environment variables for API keys
   - Merge configuration from multiple sources (file, env, CLI)
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 27. Checkpoint - Ensure all tests pass
+- [x] 27. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 28. Write integration tests for full debate flow
+- [x] 28. Write integration tests for full debate flow
   - Test complete debate from initialization to transcript generation
   - Use mock providers to simulate full debate
   - Verify all rounds execute in correct order
   - _Requirements: All requirements_
 
-- [ ] 29. Write integration tests for error scenarios
+- [x] 29. Write integration tests for error scenarios
   - Test debate behavior when model fails during different rounds
   - Test timeout and retry scenarios
   - Test partial transcript generation on errors

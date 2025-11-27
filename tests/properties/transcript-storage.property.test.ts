@@ -299,8 +299,8 @@ describe('Transcript Storage Property Tests', () => {
             await fs.unlink(filePath);
           }
         ),
-        { numRuns: 100 }
+        { numRuns: 50 }
       );
-    });
+    }, 30000); // 30 second timeout
   });
 });

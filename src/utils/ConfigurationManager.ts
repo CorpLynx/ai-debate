@@ -9,6 +9,11 @@ export interface ConfigurationResult {
   invalidParams: string[];
 }
 
+export interface APIKeyConfig {
+  openaiApiKey?: string;
+  anthropicApiKey?: string;
+}
+
 /**
  * Manages debate configuration, including validation and fallback to defaults.
  */
@@ -130,6 +135,39 @@ export class ConfigurationManager {
   }
 
   /**
+   * Loads API keys from a .debaterc file if it exists
+   * 
+   * @param configPath - Optional path to config file (defaults to ./.debaterc)
+   * @returns API key configuration from file, or empty object if file doesn't exist
+   */
+  loadAPIKeysFromFile(configPath?: string): APIKeyConfig {
+    const filePath = configPath || path.join(process.cwd(), '.debaterc');
+    
+    try {
+      if (!fs.existsSync(filePath)) {
+        return {};
+      }
+      
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(fileContent);
+      
+      const apiKeys: APIKeyConfig = {};
+      
+      if (parsed.openaiApiKey && typeof parsed.openaiApiKey === 'string') {
+        apiKeys.openaiApiKey = parsed.openaiApiKey;
+      }
+      if (parsed.anthropicApiKey && typeof parsed.anthropicApiKey === 'string') {
+        apiKeys.anthropicApiKey = parsed.anthropicApiKey;
+      }
+      
+      return apiKeys;
+    } catch (error) {
+      // Silently return empty config on error
+      return {};
+    }
+  }
+
+  /**
    * Loads configuration from environment variables
    * 
    * Environment variables:
@@ -168,6 +206,54 @@ export class ConfigurationManager {
     }
     
     return config;
+  }
+
+  /**
+   * Loads API keys from environment variables
+   * 
+   * Environment variables:
+   * - OPENAI_API_KEY
+   * - ANTHROPIC_API_KEY
+   * 
+   * @returns API key configuration from environment variables
+   */
+  loadAPIKeysFromEnv(): APIKeyConfig {
+    const apiKeys: APIKeyConfig = {};
+    
+    if (process.env.OPENAI_API_KEY) {
+      apiKeys.openaiApiKey = process.env.OPENAI_API_KEY;
+    }
+    
+    if (process.env.ANTHROPIC_API_KEY) {
+      apiKeys.anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+    }
+    
+    return apiKeys;
+  }
+
+  /**
+   * Loads and merges API keys from all sources
+   * 
+   * Precedence (highest to lowest):
+   * 1. CLI options (passed as parameter)
+   * 2. Environment variables
+   * 3. Configuration file (.debaterc)
+   * 
+   * @param cliAPIKeys - API keys from CLI flags
+   * @param configPath - Optional path to config file
+   * @returns Merged API key configuration
+   */
+  loadAndMergeAPIKeys(cliAPIKeys: APIKeyConfig = {}, configPath?: string): APIKeyConfig {
+    // Load from all sources
+    const fileAPIKeys = this.loadAPIKeysFromFile(configPath);
+    const envAPIKeys = this.loadAPIKeysFromEnv();
+    
+    // Merge with precedence: CLI > Env > File
+    return {
+      ...fileAPIKeys,
+      ...envAPIKeys,
+      ...cliAPIKeys
+    };
   }
 
   /**

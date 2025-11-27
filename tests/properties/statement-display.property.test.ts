@@ -397,7 +397,6 @@ describe('Statement Display Properties', () => {
       );
     });
   });
-});
 
   /**
    * Property 31: Formatted output length is bounded
