@@ -72,6 +72,14 @@ export class DebateValidator {
       }
     }
 
+    // Validate preparationTime
+    if (config.preparationTime !== undefined) {
+      if (typeof config.preparationTime !== 'number' || config.preparationTime <= 0 || !isFinite(config.preparationTime)) {
+        errors.push('preparationTime must be a positive finite number');
+        invalidParams.push('preparationTime');
+      }
+    }
+
     return {
       isValid: errors.length === 0,
       errors,

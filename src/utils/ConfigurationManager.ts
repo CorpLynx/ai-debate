@@ -126,6 +126,7 @@ export class ConfigurationManager {
       if (parsed.strictMode !== undefined) config.strictMode = parsed.strictMode;
       if (parsed.showPreparation !== undefined) config.showPreparation = parsed.showPreparation;
       if (parsed.numCrossExamQuestions !== undefined) config.numCrossExamQuestions = parsed.numCrossExamQuestions;
+      if (parsed.preparationTime !== undefined) config.preparationTime = parsed.preparationTime;
       
       return config;
     } catch (error) {
@@ -176,6 +177,7 @@ export class ConfigurationManager {
    * - DEBATE_STRICT_MODE
    * - DEBATE_SHOW_PREPARATION
    * - DEBATE_CROSS_EXAM_QUESTIONS
+   * - DEBATE_PREPARATION_TIME
    * 
    * @returns Partial configuration from environment variables
    */
@@ -203,6 +205,11 @@ export class ConfigurationManager {
     if (process.env.DEBATE_CROSS_EXAM_QUESTIONS) {
       const value = parseInt(process.env.DEBATE_CROSS_EXAM_QUESTIONS, 10);
       if (!isNaN(value)) config.numCrossExamQuestions = value;
+    }
+    
+    if (process.env.DEBATE_PREPARATION_TIME) {
+      const value = parseInt(process.env.DEBATE_PREPARATION_TIME, 10);
+      if (!isNaN(value)) config.preparationTime = value;
     }
     
     return config;

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { AIModelProvider } from './AIModelProvider';
+import { AIModelProvider, ModelInfo } from './AIModelProvider';
 import { DebateContext } from '../models/DebateContext';
 
 export interface AnthropicProviderConfig {
@@ -95,6 +95,98 @@ export class AnthropicProvider implements AIModelProvider {
     } catch (error) {
       return false;
     }
+  }
+
+  /**
+   * List available models from Anthropic.
+   * Note: Anthropic doesn't provide a models list API, so we return a curated list.
+   */
+  async listAvailableModels(): Promise<ModelInfo[]> {
+    // Anthropic doesn't have a public API to list models, so we maintain a curated list
+    return [
+      {
+        id: 'claude-3-5-sonnet-20241022',
+        name: 'Claude 3.5 Sonnet',
+        description: 'Most intelligent model, best for complex tasks',
+        provider: 'anthropic'
+      },
+      {
+        id: 'claude-3-5-haiku-20241022',
+        name: 'Claude 3.5 Haiku',
+        description: 'Fastest model, best for quick responses',
+        provider: 'anthropic'
+      },
+      {
+        id: 'claude-3-opus-20240229',
+        name: 'Claude 3 Opus',
+        description: 'Powerful model for complex reasoning',
+        provider: 'anthropic'
+      },
+      {
+        id: 'claude-3-sonnet-20240229',
+        name: 'Claude 3 Sonnet',
+        description: 'Balanced performance and speed',
+        provider: 'anthropic'
+      },
+      {
+        id: 'claude-3-haiku-20240307',
+        name: 'Claude 3 Haiku',
+        description: 'Fast and efficient',
+        provider: 'anthropic'
+      }
+    ];
+  }
+
+  /**
+   * Generate a response using Anthropic's streaming API.
+   */
+  async generateResponseStream(
+    prompt: string,
+    context: DebateContext,
+    onChunk: (chunk: string) => void
+  ): Promise<string> {
+    try {
+      const systemPrompt = this.buildSystemPrompt(context);
+      const userPrompt = this.buildUserPrompt(prompt, context);
+
+      const stream = await this.client.messages.stream({
+        model: this.model,
+        max_tokens: this.maxTokens,
+        temperature: this.temperature,
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: userPrompt },
+        ],
+      });
+
+      let fullResponse = '';
+
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          const content = chunk.delta.text;
+          fullResponse += content;
+          onChunk(content);
+        }
+      }
+
+      if (!fullResponse) {
+        throw new Error('No response generated from Anthropic');
+      }
+
+      return fullResponse.trim();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Anthropic streaming API error: ${error.message}`);
+      }
+      throw new Error('Unknown error occurred while calling Anthropic streaming API');
+    }
+  }
+
+  /**
+   * Check if this provider supports streaming.
+   */
+  supportsStreaming(): boolean {
+    return true;
   }
 
   /**

@@ -128,6 +128,17 @@ async function runOllamaDebate() {
   let debate = orchestrator.initializeDebate(topic, config, model1, model2);
 
   try {
+    // Preparation phase
+    if (config.showPreparation) {
+      console.log('🔍 Preparation Phase');
+      console.log('═'.repeat(80));
+      debate = await orchestrator.executePreparation(debate);
+      console.log('✅ Preparation complete\n');
+    } else {
+      // Still need to execute preparation even if not showing it
+      debate = await orchestrator.executePreparation(debate);
+    }
+
     // Opening statements
     console.log('📢 Opening Statements');
     console.log('═'.repeat(80));

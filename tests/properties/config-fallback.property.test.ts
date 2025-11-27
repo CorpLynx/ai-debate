@@ -49,6 +49,15 @@ describe('Configuration Fallback Properties', () => {
             fc.constant(1.5), // invalid (not integer)
             fc.constant(Infinity), // invalid
             fc.constant('not a number' as any) // invalid
+          ),
+          preparationTime: fc.oneof(
+            fc.constant(undefined),
+            fc.integer({ min: 1, max: 600 }), // valid
+            fc.constant(-1), // invalid
+            fc.constant(0), // invalid
+            fc.constant(Infinity), // invalid
+            fc.constant(NaN), // invalid
+            fc.constant('not a number' as any) // invalid
           )
         }),
         (userConfig) => {
@@ -67,7 +76,7 @@ describe('Configuration Fallback Properties', () => {
             // Determine if this value is invalid
             let isInvalid = false;
             
-            if (key === 'timeLimit') {
+            if (key === 'timeLimit' || key === 'preparationTime') {
               isInvalid = typeof value !== 'number' || value <= 0 || !isFinite(value);
             } else if (key === 'wordLimit') {
               isInvalid = typeof value !== 'number' || value <= 0 || !isFinite(value) || !Number.isInteger(value);
@@ -121,7 +130,8 @@ describe('Configuration Fallback Properties', () => {
           wordLimit: fc.integer({ min: 1, max: 1000 }),
           strictMode: fc.boolean(),
           showPreparation: fc.boolean(),
-          numCrossExamQuestions: fc.integer({ min: 0, max: 10 })
+          numCrossExamQuestions: fc.integer({ min: 0, max: 10 }),
+          preparationTime: fc.integer({ min: 1, max: 600 })
         }),
         (validConfig) => {
           const result = configManager.mergeAndValidate(validConfig);
@@ -149,7 +159,8 @@ describe('Configuration Fallback Properties', () => {
           fc.record({ wordLimit: fc.integer({ min: 1, max: 1000 }) }),
           fc.record({ strictMode: fc.boolean() }),
           fc.record({ showPreparation: fc.boolean() }),
-          fc.record({ numCrossExamQuestions: fc.integer({ min: 0, max: 10 }) })
+          fc.record({ numCrossExamQuestions: fc.integer({ min: 0, max: 10 }) }),
+          fc.record({ preparationTime: fc.integer({ min: 1, max: 600 }) })
         ),
         (partialConfig) => {
           const result = configManager.mergeAndValidate(partialConfig);

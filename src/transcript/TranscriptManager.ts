@@ -322,13 +322,19 @@ export class TranscriptManagerImpl implements TranscriptManager {
     const mockAffirmativeProvider = {
       getModelName: () => serialized.debate.affirmativeModelName,
       generateResponse: async () => '',
-      validateAvailability: async () => true
+      validateAvailability: async () => true,
+      listAvailableModels: async () => [],
+      generateResponseStream: async (_prompt: string, _context: any, _onChunk: (chunk: string) => void) => '',
+      supportsStreaming: () => false
     };
 
     const mockNegativeProvider = {
       getModelName: () => serialized.debate.negativeModelName,
       generateResponse: async () => '',
-      validateAvailability: async () => true
+      validateAvailability: async () => true,
+      listAvailableModels: async () => [],
+      generateResponseStream: async (_prompt: string, _context: any, _onChunk: (chunk: string) => void) => '',
+      supportsStreaming: () => false
     };
 
     return {

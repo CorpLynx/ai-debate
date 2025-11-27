@@ -149,4 +149,74 @@ export class MockAIProvider implements AIModelProvider {
     this.delayMs = 0;
     this.callCount = 0;
   }
+
+  /**
+   * List available models (mock implementation).
+   */
+  async listAvailableModels() {
+    return [
+      {
+        id: this.modelName,
+        name: this.modelName,
+        description: 'Mock model for testing',
+        provider: 'mock'
+      }
+    ];
+  }
+
+  /**
+   * Generate a streaming response by simulating chunks.
+   */
+  async generateResponseStream(
+    prompt: string,
+    context: DebateContext,
+    onChunk: (chunk: string) => void
+  ): Promise<string> {
+    this.callCount++;
+    
+    if (this.shouldFail) {
+      throw new Error(this.failureMessage);
+    }
+
+    // Get the full response
+    let fullResponse: string;
+    if (this.responses.has(prompt)) {
+      fullResponse = this.responses.get(prompt)!;
+    } else if (this.responses.has(`${context.roundType}`)) {
+      fullResponse = this.responses.get(`${context.roundType}`)!;
+    } else if (this.responses.has(`${context.position}`)) {
+      fullResponse = this.responses.get(`${context.position}`)!;
+    } else {
+      fullResponse = this.defaultResponse;
+    }
+
+    // Handle empty responses
+    if (!fullResponse || fullResponse.trim().length === 0) {
+      return fullResponse;
+    }
+
+    // Simulate streaming by breaking response into chunks (word by word)
+    // Split by word boundaries while preserving the structure
+    const words = fullResponse.split(/(\s+)/).filter(w => w.length > 0);
+    let streamedResponse = '';
+    
+    for (const word of words) {
+      streamedResponse += word;
+      onChunk(word);
+      
+      // Simulate delay between chunks if configured
+      if (this.delayMs > 0 && word.trim().length > 0) {
+        await new Promise(resolve => setTimeout(resolve, this.delayMs / words.length));
+      }
+    }
+
+    return streamedResponse;
+  }
+
+  /**
+   * Check if this provider supports streaming.
+   */
+  supportsStreaming(): boolean {
+    return true;
+  }
 }

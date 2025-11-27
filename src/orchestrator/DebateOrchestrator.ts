@@ -88,6 +88,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
   /**
    * Executes the preparation phase where both models research the topic and compose arguments.
    * Prompts both models to prepare their arguments and stores the preparation materials.
+   * Enforces preparation time limit if configured.
    * 
    * @param debate - The current debate state
    * @returns Updated debate with preparation materials stored
@@ -116,23 +117,18 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     const negativePrompt = PromptTemplates.getPreparationPrompt(debate.topic, Position.NEGATIVE);
     
     try {
-      // Generate preparation materials from both models concurrently
-      const [affirmativePreparation, negativePreparation] = await Promise.all([
-        this.generateWithErrorHandling(
-          debate,
-          debate.affirmativeModel,
-          affirmativePrompt,
-          affirmativeContext,
-          RoundType.PREPARATION
-        ),
-        this.generateWithErrorHandling(
-          debate,
-          debate.negativeModel,
-          negativePrompt,
-          negativeContext,
-          RoundType.PREPARATION
-        )
-      ]);
+      // Get preparation time limit (Requirements 5.5, 6.6)
+      const preparationTimeMs = (debate.config.preparationTime || 180) * 1000;
+      
+      // Generate preparation materials from both models concurrently with timeout
+      const [affirmativePreparation, negativePreparation] = await this.executePreparationWithTimeout(
+        debate,
+        affirmativePrompt,
+        negativePrompt,
+        affirmativeContext,
+        negativeContext,
+        preparationTimeMs
+      );
       
       // Store preparation materials (Requirement 4.3)
       const preparationRound = {
@@ -164,6 +160,102 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       await this.handleCriticalError(debate, error as Error, RoundType.PREPARATION);
       throw error;
     }
+  }
+
+  /**
+   * Executes preparation phase with timeout enforcement.
+   * Generates preparation materials from both models concurrently, stopping when time limit is reached.
+   * 
+   * @param debate - Current debate state
+   * @param affirmativePrompt - Prompt for affirmative model
+   * @param negativePrompt - Prompt for negative model
+   * @param affirmativeContext - Context for affirmative model
+   * @param negativeContext - Context for negative model
+   * @param timeoutMs - Timeout in milliseconds
+   * @returns Tuple of [affirmativePreparation, negativePreparation]
+   */
+  private async executePreparationWithTimeout(
+    debate: Debate,
+    affirmativePrompt: string,
+    negativePrompt: string,
+    affirmativeContext: DebateContext,
+    negativeContext: DebateContext,
+    timeoutMs: number
+  ): Promise<[string, string]> {
+    return new Promise<[string, string]>(async (resolve, reject) => {
+      let affirmativePreparation = '';
+      let negativePreparation = '';
+      let affirmativeComplete = false;
+      let negativeComplete = false;
+      let timedOut = false;
+
+      // Create timeout
+      const timeoutId = setTimeout(() => {
+        timedOut = true;
+        // Display timeout message (Requirement 6.6)
+        console.warn(`\nPreparation time limit of ${timeoutMs / 1000} seconds reached. Proceeding to next phase...\n`);
+        resolve([affirmativePreparation, negativePreparation]);
+      }, timeoutMs);
+
+      try {
+        // Start both preparations concurrently
+        const affirmativePromise = this.generateWithErrorHandling(
+          debate,
+          debate.affirmativeModel,
+          affirmativePrompt,
+          affirmativeContext,
+          RoundType.PREPARATION
+        ).then(result => {
+          if (!timedOut) {
+            affirmativePreparation = result;
+            affirmativeComplete = true;
+            // Check if both are complete
+            if (negativeComplete) {
+              clearTimeout(timeoutId);
+              resolve([affirmativePreparation, negativePreparation]);
+            }
+          }
+          return result;
+        }).catch(error => {
+          if (!timedOut) {
+            clearTimeout(timeoutId);
+            reject(error);
+          }
+        });
+
+        const negativePromise = this.generateWithErrorHandling(
+          debate,
+          debate.negativeModel,
+          negativePrompt,
+          negativeContext,
+          RoundType.PREPARATION
+        ).then(result => {
+          if (!timedOut) {
+            negativePreparation = result;
+            negativeComplete = true;
+            // Check if both are complete
+            if (affirmativeComplete) {
+              clearTimeout(timeoutId);
+              resolve([affirmativePreparation, negativePreparation]);
+            }
+          }
+          return result;
+        }).catch(error => {
+          if (!timedOut) {
+            clearTimeout(timeoutId);
+            reject(error);
+          }
+        });
+
+        // Wait for both to complete or timeout
+        await Promise.all([affirmativePromise, negativePromise]);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (!timedOut) {
+          reject(error);
+        }
+      }
+    });
   }
 
   /**
