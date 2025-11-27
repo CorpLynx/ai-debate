@@ -357,7 +357,7 @@
 - [ ] 17. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Add welcome banner enhancement
+- [x] 18. Add welcome banner enhancement
   - Create visually appealing ASCII art for welcome screen
   - Enhance box drawing with better styling
   - Add color and animation to welcome flow

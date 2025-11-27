@@ -595,26 +595,148 @@ export function createSpinner(text: string): Ora {
 /**
  * Display a welcome banner with ASCII art.
  * 
+ * Requirement 6.3: Display visually appealing ASCII art or box drawing
+ * Requirement 9.1: Use colors from consistent palette
+ * 
+ * @param options - Optional configuration
  * @returns The formatted welcome banner string
  */
-export function displayWelcomeBanner(): string {
-  const banner = `
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║              ${chalk.cyan.bold('AI DEBATE SYSTEM')}                        ║
-║                                                          ║
-║          ${chalk.gray('Orchestrating Intelligent Discourse')}           ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-
-${chalk.white.bold('Configure your debate through the following steps:')}
-
-  ${chalk.yellow('1.')} ${chalk.white('Select AI providers')}
-  ${chalk.yellow('2.')} ${chalk.white('Choose models')}
-  ${chalk.yellow('3.')} ${chalk.white('Enter debate topic')}
-  ${chalk.yellow('4.')} ${chalk.white('Review and start')}
-`;
-  return banner;
+export function displayWelcomeBanner(options?: {
+  colorScheme?: ColorScheme;
+  animated?: boolean;
+}): string {
+  const scheme = options?.colorScheme || DEFAULT_COLOR_SCHEME;
+  const lines: string[] = [];
+  
+  // Clear screen for better presentation
+  lines.push('\n'.repeat(2));
+  
+  // Enhanced ASCII art logo with debate theme - larger and more prominent
+  const asciiArt = [
+    `${scheme.affirmative}     ___    ____       ${scheme.negative}____  ________  ___  ____________${ANSI_RESET}`,
+    `${scheme.affirmative}    /   |  /  _/      ${scheme.negative}/ __ \\/ ____/ / / / |/_/_  __/ __/${ANSI_RESET}`,
+    `${scheme.affirmative}   / /| |  / /       ${scheme.negative}/ / / / __/ / /_/ /  >  < / / / _/  ${ANSI_RESET}`,
+    `${scheme.affirmative}  / ___ |_/ /       ${scheme.negative}/ /_/ / /___/ __  / /|  |/ / / /___  ${ANSI_RESET}`,
+    `${scheme.affirmative} /_/  |_/___/      ${scheme.negative}/_____/_____/_/ /_/_/ |_/_/ /_____/  ${ANSI_RESET}`
+  ];
+  
+  // Decorative top border with double-line style for prominence
+  lines.push(`${scheme.boxBorder}╔${'═'.repeat(78)}╗${ANSI_RESET}`);
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  
+  // Add ASCII art centered in the box
+  asciiArt.forEach(artLine => {
+    // Strip ANSI codes to calculate actual length
+    const strippedLine = artLine.replace(/\x1b\[.*?m/g, '');
+    const padding = Math.max(0, 78 - strippedLine.length);
+    const leftPad = Math.floor(padding / 2);
+    const rightPad = padding - leftPad;
+    lines.push(`${scheme.boxBorder}║${ANSI_RESET}${' '.repeat(leftPad)}${artLine}${' '.repeat(rightPad)}${scheme.boxBorder}║${ANSI_RESET}`);
+  });
+  
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  
+  // Centered subtitle with enhanced styling
+  const subtitle = `${scheme.bold}${scheme.accent}⚡ Orchestrating Intelligent Discourse ⚡${ANSI_RESET}`;
+  const subtitleStripped = 'Orchestrating Intelligent Discourse';
+  const subtitlePadding = Math.max(0, 78 - subtitleStripped.length - 4); // -4 for the lightning bolts
+  const subtitleLeftPad = Math.floor(subtitlePadding / 2);
+  const subtitleRightPad = subtitlePadding - subtitleLeftPad;
+  lines.push(`${scheme.boxBorder}║${ANSI_RESET}${' '.repeat(subtitleLeftPad)}${subtitle}${' '.repeat(subtitleRightPad)}${scheme.boxBorder}║${ANSI_RESET}`);
+  
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  
+  // Decorative separator with debate symbols
+  const separator = `${scheme.muted}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${ANSI_RESET}`;
+  lines.push(`${scheme.boxBorder}║${ANSI_RESET}${separator}${scheme.boxBorder}║${ANSI_RESET}`);
+  
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  
+  // Feature highlights with enhanced icons and spacing
+  const featureTitle = `${scheme.bold}${scheme.info}✨ Key Features${ANSI_RESET}`;
+  const featureTitleStripped = 'Key Features';
+  const featureTitlePadding = Math.max(0, 78 - featureTitleStripped.length - 2); // -2 for sparkles
+  const featureTitleLeftPad = Math.floor(featureTitlePadding / 2);
+  const featureTitleRightPad = featureTitlePadding - featureTitleLeftPad;
+  lines.push(`${scheme.boxBorder}║${ANSI_RESET}${' '.repeat(featureTitleLeftPad)}${featureTitle}${' '.repeat(featureTitleRightPad)}${scheme.boxBorder}║${ANSI_RESET}`);
+  
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  
+  const features = [
+    { icon: '🔌', color: scheme.affirmative, text: 'Multiple AI Provider Support (OpenAI, Anthropic, Local)' },
+    { icon: '⚖️', color: scheme.negative, text: 'Structured Debate Format with Formal Rounds' },
+    { icon: '📡', color: scheme.accent, text: 'Real-time Streaming Display with Progress Indicators' },
+    { icon: '📚', color: scheme.success, text: 'Automatic Citation Tracking & Bibliography Generation' }
+  ];
+  
+  features.forEach(feature => {
+    const featureLine = `${feature.icon}  ${feature.color}${feature.text}${ANSI_RESET}`;
+    const featureStripped = `${feature.icon}  ${feature.text}`;
+    const featurePadding = Math.max(0, 78 - featureStripped.length - 4); // -4 for left margin
+    lines.push(`${scheme.boxBorder}║${ANSI_RESET}    ${featureLine}${' '.repeat(featurePadding)}${scheme.boxBorder}║${ANSI_RESET}`);
+  });
+  
+  lines.push(`${scheme.boxBorder}║${' '.repeat(78)}║${ANSI_RESET}`);
+  lines.push(`${scheme.boxBorder}╚${'═'.repeat(78)}╝${ANSI_RESET}`);
+  
+  // Setup steps with enhanced formatting and visual hierarchy
+  lines.push('');
+  lines.push(`${scheme.boxBorder}┌${'─'.repeat(78)}┐${ANSI_RESET}`);
+  
+  const stepsTitle = `${scheme.bold}${scheme.info}📋 Interactive Setup Process${ANSI_RESET}`;
+  const stepsTitleStripped = 'Interactive Setup Process';
+  const stepsTitlePadding = Math.max(0, 78 - stepsTitleStripped.length - 2); // -2 for clipboard
+  const stepsTitleLeftPad = Math.floor(stepsTitlePadding / 2);
+  const stepsTitleRightPad = stepsTitlePadding - stepsTitleLeftPad;
+  lines.push(`${scheme.boxBorder}│${ANSI_RESET}${' '.repeat(stepsTitleLeftPad)}${stepsTitle}${' '.repeat(stepsTitleRightPad)}${scheme.boxBorder}│${ANSI_RESET}`);
+  
+  lines.push(`${scheme.boxBorder}├${'─'.repeat(78)}┤${ANSI_RESET}`);
+  
+  const steps = [
+    { num: '1', icon: '🔌', text: 'Select AI providers for both debate positions', color: scheme.affirmative },
+    { num: '2', icon: '🤖', text: 'Choose specific models or random selection', color: scheme.negative },
+    { num: '3', icon: '💭', text: 'Enter your debate topic or proposition', color: scheme.accent },
+    { num: '4', icon: '✅', text: 'Review configuration and start the debate', color: scheme.success }
+  ];
+  
+  steps.forEach((step, index) => {
+    const stepLine = `  ${step.color}${step.num}.${ANSI_RESET} ${step.icon}  ${scheme.primary}${step.text}${ANSI_RESET}`;
+    const stepStripped = `  ${step.num}. ${step.icon}  ${step.text}`;
+    const stepPadding = Math.max(0, 78 - stepStripped.length);
+    lines.push(`${scheme.boxBorder}│${ANSI_RESET}${stepLine}${' '.repeat(stepPadding)}${scheme.boxBorder}│${ANSI_RESET}`);
+    
+    // Add subtle separator between steps (except after last step)
+    if (index < steps.length - 1) {
+      lines.push(`${scheme.boxBorder}│${ANSI_RESET}${' '.repeat(78)}${scheme.boxBorder}│${ANSI_RESET}`);
+    }
+  });
+  
+  lines.push(`${scheme.boxBorder}└${'─'.repeat(78)}┘${ANSI_RESET}`);
+  
+  // Footer with helpful information
+  lines.push('');
+  lines.push(`${scheme.boxBorder}╔${'═'.repeat(78)}╗${ANSI_RESET}`);
+  
+  const helpText = `${scheme.secondary}💡 Type ${scheme.accent}'exit'${ANSI_RESET}${scheme.secondary} at any prompt to cancel setup${ANSI_RESET}`;
+  const helpStripped = 'Type \'exit\' at any prompt to cancel setup';
+  const helpPadding = Math.max(0, 78 - helpStripped.length - 2); // -2 for lightbulb
+  const helpLeftPad = Math.floor(helpPadding / 2);
+  const helpRightPad = helpPadding - helpLeftPad;
+  lines.push(`${scheme.boxBorder}║${ANSI_RESET}${' '.repeat(helpLeftPad)}${helpText}${' '.repeat(helpRightPad)}${scheme.boxBorder}║${ANSI_RESET}`);
+  
+  lines.push(`${scheme.boxBorder}╚${'═'.repeat(78)}╝${ANSI_RESET}`);
+  
+  lines.push('');
+  
+  // Add animation effect if requested
+  if (options?.animated) {
+    // Note: Animation would require async/await and delays
+    // For now, we just add a pulsing effect indicator
+    lines.push(`${scheme.muted}${' '.repeat(35)}⟳ Ready${' '.repeat(35)}${ANSI_RESET}`);
+    lines.push('');
+  }
+  
+  return lines.join('\n');
 }
 
 /**

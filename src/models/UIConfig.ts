@@ -92,12 +92,16 @@ export function getActiveFormattingRules(config: UIConfig): FormattingRules {
 export function createUIConfig(overrides?: Partial<UIConfig>): UIConfig {
   const defaults = { ...DEFAULT_UI_CONFIG };
   
-  // Auto-detect capabilities
-  defaults.enableColors = supportsColor();
-  defaults.enableHyperlinks = supportsHyperlinks();
+  // Auto-detect capabilities only if not explicitly set in overrides
+  if (overrides?.enableColors === undefined) {
+    defaults.enableColors = supportsColor();
+  }
+  if (overrides?.enableHyperlinks === undefined) {
+    defaults.enableHyperlinks = supportsHyperlinks();
+  }
   
-  // Disable animations in CI environments
-  if (process.env.CI !== undefined) {
+  // Disable animations in CI environments only if not explicitly set
+  if (process.env.CI !== undefined && overrides?.enableAnimations === undefined) {
     defaults.enableAnimations = false;
   }
   

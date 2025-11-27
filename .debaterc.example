@@ -4,5 +4,14 @@
   "strictMode": false,
   "showPreparation": true,
   "numCrossExamQuestions": 3,
-  "preparationTime": 180
+  "preparationTime": 180,
+  "ui": {
+    "enableRichFormatting": true,
+    "enableAnimations": true,
+    "enableColors": true,
+    "colorScheme": "default",
+    "terminalWidth": null,
+    "showPreparationProgress": true,
+    "enableHyperlinks": true
+  }
 }

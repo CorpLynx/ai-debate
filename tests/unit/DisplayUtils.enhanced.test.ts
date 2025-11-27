@@ -23,7 +23,8 @@ import {
   displaySetupStep,
   displayProgressBar,
   formatStackTrace,
-  displayRecoverySuggestions
+  displayRecoverySuggestions,
+  displayWelcomeBanner
 } from '../../src/utils/DisplayUtils';
 import { DEFAULT_COLOR_SCHEME } from '../../src/models/ColorScheme';
 
@@ -228,6 +229,66 @@ describe('Enhanced DisplayUtils', () => {
       expect(result).toContain('Check your API key');
       expect(result).toContain('Verify network connection');
       expect(result).toContain('Try again in a few moments');
+    });
+  });
+
+  describe('Welcome Banner', () => {
+    it('should display welcome banner with ASCII art', () => {
+      const result = displayWelcomeBanner({
+        colorScheme: DEFAULT_COLOR_SCHEME,
+        animated: false
+      });
+      
+      // Verify banner contains ASCII art elements
+      expect(result).toContain('___');
+      expect(result).toContain('____');
+      
+      // Verify box drawing characters
+      expect(result).toContain('╔');
+      expect(result).toContain('╗');
+      expect(result).toContain('╚');
+      expect(result).toContain('╝');
+      expect(result).toContain('┌');
+      expect(result).toContain('└');
+      
+      // Verify subtitle
+      expect(result).toContain('Orchestrating Intelligent Discourse');
+      
+      // Verify features section
+      expect(result).toContain('Key Features');
+      expect(result).toContain('Multiple AI Provider Support');
+      expect(result).toContain('Structured Debate Format');
+      expect(result).toContain('Real-time Streaming Display');
+      expect(result).toContain('Citation Tracking');
+      
+      // Verify setup steps
+      expect(result).toContain('Interactive Setup Process');
+      expect(result).toContain('Select AI providers');
+      expect(result).toContain('Choose specific models');
+      expect(result).toContain('Enter your debate topic');
+      expect(result).toContain('Review configuration');
+      
+      // Verify help text
+      expect(result).toContain('exit');
+    });
+
+    it('should display welcome banner without animation by default', () => {
+      const result = displayWelcomeBanner();
+      
+      expect(result).toContain('___');
+      expect(result).toContain('Orchestrating Intelligent Discourse');
+      expect(result).not.toContain('Ready'); // Animation indicator
+    });
+
+    it('should display welcome banner with animation indicator when requested', () => {
+      const result = displayWelcomeBanner({
+        colorScheme: DEFAULT_COLOR_SCHEME,
+        animated: true
+      });
+      
+      expect(result).toContain('___');
+      expect(result).toContain('Orchestrating Intelligent Discourse');
+      expect(result).toContain('Ready'); // Animation indicator
     });
   });
 });

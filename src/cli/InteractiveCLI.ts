@@ -234,10 +234,10 @@ export class InteractiveCLI {
    * Display welcome message and overview of setup process.
    * 
    * Requirement 1.2: Display welcome message and overview
-   * Requirement 8.1: Add welcome screen with ASCII art or box drawing
+   * Requirement 6.3: Add welcome screen with ASCII art or box drawing
    */
   displayWelcome(): void {
-    console.log(displayWelcomeBanner());
+    console.log(displayWelcomeBanner({ animated: false }));
   }
 
   /**
