@@ -2,6 +2,10 @@ import { Debate } from '../models/Debate';
 import { Transcript, TranscriptSummary, FormattedRound, OutputFormat } from '../models/Transcript';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { RichTextFormatter } from '../utils/RichTextFormatter';
+import { ResponsiveLayout, BoxOptions } from '../utils/ResponsiveLayout';
+import { DEFAULT_COLOR_SCHEME, ANSI_RESET } from '../models/ColorScheme';
+import { BoxStyle } from '../models/FormattingRules';
 
 export interface TranscriptManager {
   generateTranscript(debate: Debate): Transcript;
@@ -12,9 +16,21 @@ export interface TranscriptManager {
 
 export class TranscriptManagerImpl implements TranscriptManager {
   private transcriptsDir: string;
+  private citations: any[] = []; // Will be set by orchestrator
+  private richTextFormatter: RichTextFormatter;
+  private layout: ResponsiveLayout;
 
   constructor(transcriptsDir: string = './transcripts') {
     this.transcriptsDir = transcriptsDir;
+    this.richTextFormatter = new RichTextFormatter();
+    this.layout = new ResponsiveLayout();
+  }
+
+  /**
+   * Sets the citations to be included in the transcript
+   */
+  setCitations(citations: any[]): void {
+    this.citations = citations;
   }
 
   /**
@@ -73,7 +89,8 @@ export class TranscriptManagerImpl implements TranscriptManager {
     return {
       debate,
       formattedRounds,
-      summary
+      summary,
+      citations: this.citations.length > 0 ? this.citations : undefined
     };
   }
 
@@ -100,96 +117,286 @@ export class TranscriptManagerImpl implements TranscriptManager {
   }
 
   /**
-   * Formats transcript as plain text
+   * Formats transcript as plain text with rich formatting
+   * 
+   * Requirements:
+   * - 4.1: Display transcript with clear section headers
+   * - 4.2: Include decorative borders for text export
+   * - 4.3: Present summary statistics in visually appealing format
+   * - 4.4: Format timestamps in human-readable manner
+   * - 4.5: Present metrics with visual emphasis
    */
   private formatAsText(transcript: Transcript): string {
     const lines: string[] = [];
+    const terminalSize = this.layout.getTerminalSize();
+    const boxWidth = Math.min(100, terminalSize.width - 4);
     
-    // Header
-    lines.push('='.repeat(80));
-    lines.push('DEBATE TRANSCRIPT');
-    lines.push('='.repeat(80));
+    // Requirement 4.2: Decorative borders for text export
+    const topBorder = '╔' + '═'.repeat(boxWidth - 2) + '╗';
+    const bottomBorder = '╚' + '═'.repeat(boxWidth - 2) + '╝';
+    const separator = '─'.repeat(boxWidth);
+    
+    // Header with decorative border
+    lines.push(topBorder);
+    const title = 'DEBATE TRANSCRIPT';
+    const titlePadding = Math.floor((boxWidth - 2 - title.length) / 2);
+    lines.push('║' + ' '.repeat(titlePadding) + 
+               `${DEFAULT_COLOR_SCHEME.bold}${title}${ANSI_RESET}` + 
+               ' '.repeat(boxWidth - 2 - titlePadding - title.length) + '║');
+    lines.push(bottomBorder);
     lines.push('');
     
-    // Summary
-    lines.push(`Topic: ${transcript.summary.topic}`);
-    lines.push(`Affirmative: ${transcript.summary.models.affirmative}`);
-    lines.push(`Negative: ${transcript.summary.models.negative}`);
-    lines.push(`Duration: ${transcript.summary.totalDuration.toFixed(2)}s`);
-    lines.push(`Rounds: ${transcript.summary.roundCount}`);
+    // Requirement 4.3: Summary statistics in visually appealing format
+    lines.push(this.formatSummaryStatistics(transcript.summary, boxWidth));
     lines.push('');
-    lines.push('='.repeat(80));
+    lines.push(separator);
     lines.push('');
     
-    // Rounds
-    for (const round of transcript.formattedRounds) {
-      lines.push(`[${round.roundType.toUpperCase()}]`);
-      lines.push('-'.repeat(80));
+    // Requirement 4.1: Clear section headers for each round
+    for (let i = 0; i < transcript.formattedRounds.length; i++) {
+      const round = transcript.formattedRounds[i];
+      
+      // Section header with visual prominence
+      const sectionHeader = this.formatSectionHeader(
+        round.roundType, 
+        i + 1, 
+        transcript.formattedRounds.length,
+        round.timestamp
+      );
+      lines.push(sectionHeader);
+      lines.push('');
       
       if (round.affirmativeContent) {
-        lines.push(`Affirmative (${transcript.summary.models.affirmative}):`);
-        lines.push(round.affirmativeContent);
+        const affirmativeLabel = `${DEFAULT_COLOR_SCHEME.affirmative}▸ Affirmative${ANSI_RESET} ${DEFAULT_COLOR_SCHEME.muted}(${transcript.summary.models.affirmative})${ANSI_RESET}`;
+        lines.push(affirmativeLabel);
+        lines.push('');
+        
+        // Format content with rich text
+        const formattedContent = this.richTextFormatter.formatRichText(round.affirmativeContent, {
+          terminalWidth: boxWidth,
+          indentLevel: 1
+        });
+        lines.push(formattedContent);
         lines.push('');
       }
       
       if (round.negativeContent) {
-        lines.push(`Negative (${transcript.summary.models.negative}):`);
-        lines.push(round.negativeContent);
+        const negativeLabel = `${DEFAULT_COLOR_SCHEME.negative}▸ Negative${ANSI_RESET} ${DEFAULT_COLOR_SCHEME.muted}(${transcript.summary.models.negative})${ANSI_RESET}`;
+        lines.push(negativeLabel);
+        lines.push('');
+        
+        // Format content with rich text
+        const formattedContent = this.richTextFormatter.formatRichText(round.negativeContent, {
+          terminalWidth: boxWidth,
+          indentLevel: 1
+        });
+        lines.push(formattedContent);
         lines.push('');
       }
       
+      // Add separator between rounds
+      if (i < transcript.formattedRounds.length - 1) {
+        lines.push(separator);
+        lines.push('');
+      }
+    }
+    
+    // Add bibliography if citations exist
+    if (transcript.citations && transcript.citations.length > 0) {
       lines.push('');
+      lines.push(separator);
+      lines.push('');
+      lines.push(this.formatBibliographySection(transcript.citations));
     }
     
     return lines.join('\n');
   }
 
   /**
-   * Formats transcript as markdown
+   * Formats summary statistics in a visually appealing table format
+   * Requirement 4.3: Present summary statistics in visually appealing format
+   * Requirement 4.5: Present metrics with visual emphasis
+   */
+  private formatSummaryStatistics(summary: TranscriptSummary, width: number): string {
+    const lines: string[] = [];
+    
+    // Create a box for summary
+    const boxOptions: BoxOptions = {
+      title: 'Summary',
+      padding: 1,
+      style: BoxStyle.ROUNDED,
+      color: DEFAULT_COLOR_SCHEME.info,
+      width: Math.min(80, width)
+    };
+    
+    // Format metrics with visual emphasis
+    const content = [
+      `${DEFAULT_COLOR_SCHEME.bold}Topic:${ANSI_RESET} ${summary.topic}`,
+      '',
+      `${DEFAULT_COLOR_SCHEME.bold}Participants:${ANSI_RESET}`,
+      `  ${DEFAULT_COLOR_SCHEME.affirmative}● Affirmative:${ANSI_RESET} ${summary.models.affirmative}`,
+      `  ${DEFAULT_COLOR_SCHEME.negative}● Negative:${ANSI_RESET} ${summary.models.negative}`,
+      '',
+      `${DEFAULT_COLOR_SCHEME.bold}Statistics:${ANSI_RESET}`,
+      `  ${DEFAULT_COLOR_SCHEME.accent}⏱${ANSI_RESET}  Duration: ${this.formatDuration(summary.totalDuration)}`,
+      `  ${DEFAULT_COLOR_SCHEME.accent}🔄${ANSI_RESET} Rounds: ${summary.roundCount}`
+    ].join('\n');
+    
+    return this.layout.createResponsiveBox(content, boxOptions);
+  }
+
+  /**
+   * Formats a section header with visual prominence
+   * Requirement 4.1: Display transcript with clear section headers
+   * Requirement 4.4: Format timestamps in human-readable manner
+   */
+  private formatSectionHeader(roundType: string, roundNumber: number, totalRounds: number, timestamp: Date): string {
+    const formattedRoundType = this.capitalizeRoundType(roundType);
+    const formattedTimestamp = this.formatTimestamp(timestamp);
+    
+    // Create prominent header
+    const headerText = `${DEFAULT_COLOR_SCHEME.accent}▸▸▸${ANSI_RESET} ${DEFAULT_COLOR_SCHEME.bold}${formattedRoundType}${ANSI_RESET} ${DEFAULT_COLOR_SCHEME.muted}(Round ${roundNumber}/${totalRounds})${ANSI_RESET}`;
+    const timestampText = `${DEFAULT_COLOR_SCHEME.muted}${formattedTimestamp}${ANSI_RESET}`;
+    
+    return `${headerText}  ${timestampText}`;
+  }
+
+  /**
+   * Formats a timestamp in a human-readable and consistent manner
+   * Requirement 4.4: Format timestamps in human-readable manner
+   */
+  private formatTimestamp(timestamp: Date): string {
+    const hours = timestamp.getHours().toString().padStart(2, '0');
+    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+    const seconds = timestamp.getSeconds().toString().padStart(2, '0');
+    
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * Formats duration with visual emphasis
+   * Requirement 4.5: Present metrics with visual emphasis
+   */
+  private formatDuration(seconds: number): string {
+    if (seconds < 60) {
+      return `${DEFAULT_COLOR_SCHEME.success}${seconds.toFixed(1)}s${ANSI_RESET}`;
+    }
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${DEFAULT_COLOR_SCHEME.success}${minutes}m ${remainingSeconds}s${ANSI_RESET}`;
+  }
+
+  /**
+   * Formats the bibliography section
+   */
+  private formatBibliographySection(citations: any[]): string {
+    const lines: string[] = [];
+    
+    lines.push(`${DEFAULT_COLOR_SCHEME.bold}${DEFAULT_COLOR_SCHEME.accent}Bibliography${ANSI_RESET}`);
+    lines.push('');
+    
+    for (let i = 0; i < citations.length; i++) {
+      const citation = citations[i];
+      const number = `${DEFAULT_COLOR_SCHEME.muted}[${i + 1}]${ANSI_RESET}`;
+      lines.push(`${number} ${citation.text || citation.url || 'Unknown source'}`);
+    }
+    
+    return lines.join('\n');
+  }
+
+  /**
+   * Formats transcript as markdown with enhanced formatting
+   * 
+   * Requirements:
+   * - 4.1: Display transcript with clear section headers
+   * - 4.3: Present summary statistics in visually appealing format
+   * - 4.4: Format timestamps in human-readable manner
+   * - 4.5: Present metrics with visual emphasis
    */
   private formatAsMarkdown(transcript: Transcript): string {
     const lines: string[] = [];
     
-    // Header
-    lines.push('# Debate Transcript');
-    lines.push('');
-    
-    // Summary
-    lines.push('## Summary');
-    lines.push('');
-    lines.push(`**Topic:** ${transcript.summary.topic}`);
-    lines.push('');
-    lines.push(`**Participants:**`);
-    lines.push(`- Affirmative: ${transcript.summary.models.affirmative}`);
-    lines.push(`- Negative: ${transcript.summary.models.negative}`);
-    lines.push('');
-    lines.push(`**Duration:** ${transcript.summary.totalDuration.toFixed(2)}s`);
-    lines.push(`**Rounds:** ${transcript.summary.roundCount}`);
+    // Header with decorative elements
+    lines.push('# 📜 Debate Transcript');
     lines.push('');
     lines.push('---');
     lines.push('');
     
-    // Rounds
-    for (const round of transcript.formattedRounds) {
-      lines.push(`## ${this.capitalizeRoundType(round.roundType)}`);
+    // Summary with enhanced formatting
+    lines.push('## 📊 Summary');
+    lines.push('');
+    lines.push('| Metric | Value |');
+    lines.push('|--------|-------|');
+    lines.push(`| **Topic** | ${transcript.summary.topic} |`);
+    lines.push(`| **Affirmative** | ${transcript.summary.models.affirmative} |`);
+    lines.push(`| **Negative** | ${transcript.summary.models.negative} |`);
+    lines.push(`| **Duration** | ${this.formatDurationPlain(transcript.summary.totalDuration)} |`);
+    lines.push(`| **Rounds** | ${transcript.summary.roundCount} |`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    
+    // Rounds with section headers
+    for (let i = 0; i < transcript.formattedRounds.length; i++) {
+      const round = transcript.formattedRounds[i];
+      const formattedRoundType = this.capitalizeRoundType(round.roundType);
+      const formattedTimestamp = this.formatTimestamp(round.timestamp);
+      
+      // Section header with round number and timestamp
+      lines.push(`## 🎯 ${formattedRoundType} (Round ${i + 1}/${transcript.formattedRounds.length})`);
+      lines.push('');
+      lines.push(`*Time: ${formattedTimestamp}*`);
       lines.push('');
       
       if (round.affirmativeContent) {
-        lines.push(`### Affirmative (${transcript.summary.models.affirmative})`);
+        lines.push(`### 🔵 Affirmative (${transcript.summary.models.affirmative})`);
         lines.push('');
         lines.push(round.affirmativeContent);
         lines.push('');
       }
       
       if (round.negativeContent) {
-        lines.push(`### Negative (${transcript.summary.models.negative})`);
+        lines.push(`### 🔴 Negative (${transcript.summary.models.negative})`);
         lines.push('');
         lines.push(round.negativeContent);
         lines.push('');
       }
+      
+      if (i < transcript.formattedRounds.length - 1) {
+        lines.push('---');
+        lines.push('');
+      }
+    }
+    
+    // Add bibliography if citations exist
+    if (transcript.citations && transcript.citations.length > 0) {
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+      lines.push('## 📚 Bibliography');
+      lines.push('');
+      
+      for (let i = 0; i < transcript.citations.length; i++) {
+        const citation = transcript.citations[i];
+        lines.push(`${i + 1}. ${citation.text || citation.url || 'Unknown source'}`);
+      }
     }
     
     return lines.join('\n');
+  }
+
+  /**
+   * Formats duration without ANSI codes (for markdown/JSON)
+   */
+  private formatDurationPlain(seconds: number): string {
+    if (seconds < 60) {
+      return `${seconds.toFixed(1)}s`;
+    }
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}m ${remainingSeconds}s`;
   }
 
   /**

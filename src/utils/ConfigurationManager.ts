@@ -105,14 +105,16 @@ export class ConfigurationManager {
    * Loads configuration from a .debaterc file if it exists
    * 
    * @param configPath - Optional path to config file (defaults to ./.debaterc)
-   * @returns Partial configuration from file, or empty object if file doesn't exist
+   * @returns Object containing partial configuration and any warnings
    */
-  loadFromFile(configPath?: string): Partial<DebateConfig> {
+  loadFromFile(configPath?: string): { config: Partial<DebateConfig>; warnings: string[] } {
     const filePath = configPath || path.join(process.cwd(), '.debaterc');
+    const warnings: string[] = [];
     
     try {
       if (!fs.existsSync(filePath)) {
-        return {};
+        // File doesn't exist - not an error, just use defaults
+        return { config: {}, warnings: [] };
       }
       
       const fileContent = fs.readFileSync(filePath, 'utf-8');
@@ -128,10 +130,17 @@ export class ConfigurationManager {
       if (parsed.numCrossExamQuestions !== undefined) config.numCrossExamQuestions = parsed.numCrossExamQuestions;
       if (parsed.preparationTime !== undefined) config.preparationTime = parsed.preparationTime;
       
-      return config;
+      return { config, warnings };
     } catch (error) {
-      // Silently return empty config on error - warnings will be shown by caller if needed
-      return {};
+      // Handle parse errors and file read errors
+      if (error instanceof SyntaxError) {
+        warnings.push(`Configuration file at ${filePath} contains invalid JSON format. Using default values.`);
+      } else if (error instanceof Error) {
+        warnings.push(`Error reading configuration file at ${filePath}: ${error.message}. Using default values.`);
+      } else {
+        warnings.push(`Unknown error reading configuration file at ${filePath}. Using default values.`);
+      }
+      return { config: {}, warnings };
     }
   }
 
@@ -278,17 +287,26 @@ export class ConfigurationManager {
    */
   loadAndMerge(cliConfig: Partial<DebateConfig> = {}, configPath?: string): ConfigurationResult {
     // Load from all sources
-    const fileConfig = this.loadFromFile(configPath);
+    const fileResult = this.loadFromFile(configPath);
     const envConfig = this.loadFromEnv();
     
     // Merge with precedence: CLI > Env > File > Defaults
     const mergedConfig: Partial<DebateConfig> = {
-      ...fileConfig,
+      ...fileResult.config,
       ...envConfig,
       ...cliConfig
     };
     
     // Validate and apply defaults for invalid parameters
-    return this.mergeAndValidate(mergedConfig);
+    const validationResult = this.mergeAndValidate(mergedConfig);
+    
+    // Combine warnings from file loading and validation
+    const allWarnings = [...fileResult.warnings, ...validationResult.warnings];
+    
+    return {
+      config: validationResult.config,
+      warnings: allWarnings,
+      invalidParams: validationResult.invalidParams
+    };
   }
 }

@@ -207,7 +207,7 @@
   - **Property 21: Menus include numbered options**
   - **Validates: Requirements 8.3**
 
-- [ ] 15. Implement exit and cancellation handling
+- [x] 15. Implement exit and cancellation handling
   - Add exit detection at each interactive prompt
   - Create exit confirmation dialog
   - Ensure no debate is started when exit is confirmed
@@ -215,61 +215,61 @@
   - Return null from InteractiveCLI.start() on cancellation
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 15.1 Write property test for exit preventing debate start
+- [x] 15.1 Write property test for exit preventing debate start
   - **Property 25: Exit prevents debate start**
   - **Validates: Requirements 10.3**
 
-- [ ] 15.2 Write property test for no partial config save
+- [x] 15.2 Write property test for no partial config save
   - **Property 26: Exit does not save partial config**
   - **Validates: Requirements 10.4**
 
-- [ ] 16. Update debate orchestrator for streaming preparation
+- [x] 16. Update debate orchestrator for streaming preparation
   - Modify executePreparation() to use streaming if available
   - Pass StreamingHandler callbacks to model providers
   - Display preparation output in real-time during generation
   - Fall back to non-streaming display if provider doesn't support it
   - _Requirements: 6.1, 6.2, 6.4, 6.5_
 
-- [ ] 17. Update CLI entry point for interactive mode
+- [x] 17. Update CLI entry point for interactive mode
   - Detect when application is run without arguments
   - Create and invoke InteractiveCLI when no arguments provided
   - Pass configured session to debate orchestrator
   - Maintain backward compatibility with argument-based mode
   - _Requirements: 1.1_
 
-- [ ] 18. Add configuration file support for preparation time
+- [x] 18. Add configuration file support for preparation time
   - Update .debaterc.example with preparationTime field
   - Update configuration loading to parse preparationTime
   - Use default value if preparationTime is missing
   - Document preparationTime in README
   - _Requirements: 7.1, 7.3, 9.1, 9.2_
 
-- [ ] 18.1 Write property test for configuration updates
+- [x] 18.1 Write property test for configuration updates
   - **Property 23: Configuration updates are reflected**
   - **Validates: Requirements 9.4**
 
-- [ ] 19. Implement error handling for provider operations
+- [x] 19. Implement error handling for provider operations
   - Handle provider unavailable errors
   - Handle model list fetch failures
   - Handle random selection with no models
   - Display clear error messages with recovery suggestions
   - _Requirements: 2.4_
 
-- [ ] 20. Implement error handling for configuration operations
+- [x] 20. Implement error handling for configuration operations
   - Handle missing configuration file (use defaults)
   - Handle invalid configuration format (parse errors)
   - Handle missing individual parameters (use defaults)
   - Display warnings for configuration issues
   - _Requirements: 7.3_
 
-- [ ] 21. Implement error handling for streaming operations
+- [x] 21. Implement error handling for streaming operations
   - Handle stream interruption (display partial content)
   - Handle timeout during streaming (stop and proceed)
   - Display error messages for streaming failures
   - Allow retry on streaming errors
   - _Requirements: 6.6_
 
-- [ ] 22. Add visual enhancements to interactive mode
+- [x] 22. Add visual enhancements to interactive mode
   - Add welcome screen with ASCII art or box drawing
   - Add progress indicators (Step X of Y)
   - Add color coding for different sections

@@ -222,12 +222,11 @@ describe('Preparation Timeout Property Tests', () => {
         
         // Should have displayed timeout message
         const timeoutMessage = warnMessages.find(msg => 
-          msg.includes('Preparation time limit') && msg.includes('reached')
+          msg.includes('Preparation time limit') && msg.includes('Proceeding to next phase')
         );
         
         expect(timeoutMessage).toBeDefined();
         expect(timeoutMessage).toContain('1 seconds');
-        expect(timeoutMessage).toContain('Proceeding to next phase');
       } finally {
         // Restore console.warn
         console.warn = originalWarn;

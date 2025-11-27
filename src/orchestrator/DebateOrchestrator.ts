@@ -11,7 +11,11 @@ import { randomUUID } from 'crypto';
 import { ErrorLogger } from '../utils/ErrorLogger';
 import { TranscriptManagerImpl } from '../transcript/TranscriptManager';
 import { ConfigurationManager } from '../utils/ConfigurationManager';
+import { StreamingHandler } from '../streaming/StreamingHandler';
 import * as PromptTemplates from '../prompts/PromptTemplates';
+import { CitationExtractor } from '../utils/CitationExtractor';
+import { CitationTracker } from '../utils/CitationTracker';
+import { BibliographyGenerator } from '../utils/BibliographyGenerator';
 
 export interface DebateOrchestrator {
   initializeDebate(topic: string, config: DebateConfig, affirmativeModel: AIModelProvider, negativeModel: AIModelProvider): Debate;
@@ -39,11 +43,17 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
   private validator: DebateValidator;
   private transcriptManager: TranscriptManagerImpl;
   private configManager: ConfigurationManager;
+  private citationExtractor: CitationExtractor;
+  private citationTracker: CitationTracker;
+  private bibliographyGenerator: BibliographyGenerator;
 
   constructor(transcriptsDir?: string) {
     this.validator = new DebateValidator();
     this.transcriptManager = new TranscriptManagerImpl(transcriptsDir);
     this.configManager = new ConfigurationManager();
+    this.citationExtractor = new CitationExtractor();
+    this.citationTracker = new CitationTracker();
+    this.bibliographyGenerator = new BibliographyGenerator();
   }
   
   /**
@@ -69,6 +79,9 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       throw new Error(`Invalid debate topic: ${validationResult.errors.join(', ')}`);
     }
 
+    // Reset citation tracking for new debate
+    this.resetCitationTracking();
+
     // Store topic in debate session (Requirement 1.2)
     const debate: Debate = {
       id: randomUUID(),
@@ -89,6 +102,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
    * Executes the preparation phase where both models research the topic and compose arguments.
    * Prompts both models to prepare their arguments and stores the preparation materials.
    * Enforces preparation time limit if configured.
+   * Uses streaming if available for real-time display.
    * 
    * @param debate - The current debate state
    * @returns Updated debate with preparation materials stored
@@ -121,6 +135,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       const preparationTimeMs = (debate.config.preparationTime || 180) * 1000;
       
       // Generate preparation materials from both models concurrently with timeout
+      // Use streaming if available (Requirements 6.1, 6.2, 6.4, 6.5)
       const [affirmativePreparation, negativePreparation] = await this.executePreparationWithTimeout(
         debate,
         affirmativePrompt,
@@ -130,6 +145,20 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         preparationTimeMs
       );
       
+      // Extract citations from preparation materials (Requirement 12.2)
+      this.extractAndTrackCitations(
+        affirmativePreparation,
+        debate.affirmativeModel.getModelName(),
+        Position.AFFIRMATIVE,
+        RoundType.PREPARATION
+      );
+      this.extractAndTrackCitations(
+        negativePreparation,
+        debate.negativeModel.getModelName(),
+        Position.NEGATIVE,
+        RoundType.PREPARATION
+      );
+
       // Store preparation materials (Requirement 4.3)
       const preparationRound = {
         type: RoundType.PREPARATION,
@@ -165,6 +194,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
   /**
    * Executes preparation phase with timeout enforcement.
    * Generates preparation materials from both models concurrently, stopping when time limit is reached.
+   * Uses streaming if available for real-time display (Requirements 6.1, 6.2, 6.4).
+   * Includes retry logic for streaming failures (Requirement 6.6).
    * 
    * @param debate - Current debate state
    * @param affirmativePrompt - Prompt for affirmative model
@@ -189,26 +220,130 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       let negativeComplete = false;
       let timedOut = false;
 
+      // Create streaming handler for real-time display (Requirement 6.1)
+      const uiConfig = debate.config.ui;
+      const streamingHandler = new StreamingHandler(uiConfig);
+      
+      // Display preparation phase header (Requirement 6.1)
+      streamingHandler.displayPhaseHeader();
+      
+      // Initialize progress bars if enabled (Requirements 11.1, 11.3)
+      if (uiConfig?.showPreparationProgress) {
+        streamingHandler.initializePreparationProgress(
+          debate.affirmativeModel.getModelName(),
+          debate.negativeModel.getModelName()
+        );
+      }
+
       // Create timeout
       const timeoutId = setTimeout(() => {
         timedOut = true;
-        // Display timeout message (Requirement 6.6)
+        // Display timeout message for any incomplete preparations (Requirement 6.6)
+        if (!affirmativeComplete && affirmativePreparation) {
+          streamingHandler.onTimeout(
+            debate.affirmativeModel.getModelName(),
+            Position.AFFIRMATIVE,
+            affirmativePreparation
+          );
+        }
+        if (!negativeComplete && negativePreparation) {
+          streamingHandler.onTimeout(
+            debate.negativeModel.getModelName(),
+            Position.NEGATIVE,
+            negativePreparation
+          );
+        }
         console.warn(`\nPreparation time limit of ${timeoutMs / 1000} seconds reached. Proceeding to next phase...\n`);
+        
+        // Cleanup progress display on timeout
+        if (uiConfig?.showPreparationProgress) {
+          streamingHandler.cleanup();
+        }
+        
         resolve([affirmativePreparation, negativePreparation]);
       }, timeoutMs);
 
       try {
+        // Check if models support streaming
+        const affirmativeSupportsStreaming = debate.affirmativeModel.supportsStreaming();
+        const negativeSupportsStreaming = debate.negativeModel.supportsStreaming();
+
         // Start both preparations concurrently
-        const affirmativePromise = this.generateWithErrorHandling(
-          debate,
-          debate.affirmativeModel,
-          affirmativePrompt,
-          affirmativeContext,
-          RoundType.PREPARATION
-        ).then(result => {
+        const affirmativePromise = (async () => {
+          // Display header for affirmative model (Requirement 6.4)
+          streamingHandler.displayPreparationHeader(
+            debate.affirmativeModel.getModelName(),
+            Position.AFFIRMATIVE
+          );
+
+          let result: string = '';
+          
+          // Use streaming if available (Requirement 6.2), otherwise fall back to non-streaming (Requirement 6.5)
+          if (affirmativeSupportsStreaming) {
+            // Streaming path with error handling and partial content recovery
+            try {
+              let partialContent = '';
+              result = await debate.affirmativeModel.generateResponseStream(
+                affirmativePrompt,
+                affirmativeContext,
+                (chunk: string) => {
+                  if (!timedOut) {
+                    // Accumulate partial content for error recovery
+                    partialContent += chunk;
+                    affirmativePreparation = partialContent;
+                    // Display chunk in real-time (Requirement 6.2)
+                    streamingHandler.onChunk(chunk, debate.affirmativeModel.getModelName(), Position.AFFIRMATIVE);
+                  }
+                }
+              );
+            } catch (error) {
+              if (!timedOut) {
+                // Display error message with partial content info
+                streamingHandler.onError(
+                  error as Error,
+                  debate.affirmativeModel.getModelName(),
+                  Position.AFFIRMATIVE,
+                  affirmativePreparation
+                );
+                
+                // If we have partial content from streaming, use it instead of failing completely
+                if (affirmativePreparation && affirmativePreparation.length > 0) {
+                  console.warn(
+                    `Using partial content from ${debate.affirmativeModel.getModelName()} (${affirmativePreparation.split(/\s+/).filter(w => w.length > 0).length} words)`
+                  );
+                  result = affirmativePreparation;
+                } else {
+                  // No partial content, propagate error
+                  clearTimeout(timeoutId);
+                  reject(error);
+                  throw error;
+                }
+              } else {
+                throw error;
+              }
+            }
+          } else {
+            // Fall back to non-streaming (Requirement 6.5) with existing retry logic
+            try {
+              result = await this.generateWithTimeout(debate, debate.affirmativeModel, affirmativePrompt, affirmativeContext);
+              // Display the complete result
+              console.log(result);
+            } catch (error) {
+              if (!timedOut) {
+                clearTimeout(timeoutId);
+                reject(error);
+              }
+              throw error;
+            }
+          }
+
           if (!timedOut) {
             affirmativePreparation = result;
             affirmativeComplete = true;
+            
+            // Display completion message (Requirement 6.4)
+            streamingHandler.onComplete(debate.affirmativeModel.getModelName(), Position.AFFIRMATIVE);
+            
             // Check if both are complete
             if (negativeComplete) {
               clearTimeout(timeoutId);
@@ -216,23 +351,83 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
             }
           }
           return result;
-        }).catch(error => {
-          if (!timedOut) {
-            clearTimeout(timeoutId);
-            reject(error);
-          }
-        });
+        })();
 
-        const negativePromise = this.generateWithErrorHandling(
-          debate,
-          debate.negativeModel,
-          negativePrompt,
-          negativeContext,
-          RoundType.PREPARATION
-        ).then(result => {
+        const negativePromise = (async () => {
+          // Display header for negative model (Requirement 6.4)
+          streamingHandler.displayPreparationHeader(
+            debate.negativeModel.getModelName(),
+            Position.NEGATIVE
+          );
+
+          let result: string = '';
+          
+          // Use streaming if available (Requirement 6.2), otherwise fall back to non-streaming (Requirement 6.5)
+          if (negativeSupportsStreaming) {
+            // Streaming path with error handling and partial content recovery
+            try {
+              let partialContent = '';
+              result = await debate.negativeModel.generateResponseStream(
+                negativePrompt,
+                negativeContext,
+                (chunk: string) => {
+                  if (!timedOut) {
+                    // Accumulate partial content for error recovery
+                    partialContent += chunk;
+                    negativePreparation = partialContent;
+                    // Display chunk in real-time (Requirement 6.2)
+                    streamingHandler.onChunk(chunk, debate.negativeModel.getModelName(), Position.NEGATIVE);
+                  }
+                }
+              );
+            } catch (error) {
+              if (!timedOut) {
+                // Display error message with partial content info
+                streamingHandler.onError(
+                  error as Error,
+                  debate.negativeModel.getModelName(),
+                  Position.NEGATIVE,
+                  negativePreparation
+                );
+                
+                // If we have partial content from streaming, use it instead of failing completely
+                if (negativePreparation && negativePreparation.length > 0) {
+                  console.warn(
+                    `Using partial content from ${debate.negativeModel.getModelName()} (${negativePreparation.split(/\s+/).filter(w => w.length > 0).length} words)`
+                  );
+                  result = negativePreparation;
+                } else {
+                  // No partial content, propagate error
+                  clearTimeout(timeoutId);
+                  reject(error);
+                  throw error;
+                }
+              } else {
+                throw error;
+              }
+            }
+          } else {
+            // Fall back to non-streaming (Requirement 6.5) with existing retry logic
+            try {
+              result = await this.generateWithTimeout(debate, debate.negativeModel, negativePrompt, negativeContext);
+              // Display the complete result
+              console.log(result);
+            } catch (error) {
+              if (!timedOut) {
+                clearTimeout(timeoutId);
+                reject(error);
+              }
+              throw error;
+            }
+          }
+
           if (!timedOut) {
             negativePreparation = result;
             negativeComplete = true;
+            
+            // Display completion message (Requirement 6.4)
+            streamingHandler.onComplete(debate.negativeModel.getModelName(), Position.NEGATIVE);
+            
             // Check if both are complete
             if (affirmativeComplete) {
               clearTimeout(timeoutId);
@@ -240,17 +435,22 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
             }
           }
           return result;
-        }).catch(error => {
-          if (!timedOut) {
-            clearTimeout(timeoutId);
-            reject(error);
-          }
-        });
+        })();
 
         // Wait for both to complete or timeout
         await Promise.all([affirmativePromise, negativePromise]);
+        
+        // Display completion summary and cleanup (Requirements 3.3, 11.4)
+        if (uiConfig?.showPreparationProgress) {
+          streamingHandler.displayCompletionSummary();
+          streamingHandler.cleanup();
+        }
       } catch (error) {
         clearTimeout(timeoutId);
+        // Cleanup on error
+        if (uiConfig?.showPreparationProgress) {
+          streamingHandler.cleanup();
+        }
         if (!timedOut) {
           reject(error);
         }
@@ -290,6 +490,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         RoundType.OPENING
       );
       
+      // Extract citations from affirmative opening (Requirement 12.2)
+      this.extractAndTrackCitations(
+        affirmativeResponse,
+        debate.affirmativeModel.getModelName(),
+        Position.AFFIRMATIVE,
+        RoundType.OPENING
+      );
+      
       // Create affirmative statement
       const affirmativeStatement: Statement = {
         model: debate.affirmativeModel.getModelName(),
@@ -305,6 +513,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
+        RoundType.OPENING
+      );
+      
+      // Extract citations from negative opening (Requirement 12.2)
+      this.extractAndTrackCitations(
+        negativeResponse,
+        debate.negativeModel.getModelName(),
+        Position.NEGATIVE,
         RoundType.OPENING
       );
       
@@ -383,6 +599,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         RoundType.REBUTTAL
       );
       
+      // Extract citations from affirmative rebuttal (Requirement 12.2)
+      this.extractAndTrackCitations(
+        affirmativeResponse,
+        debate.affirmativeModel.getModelName(),
+        Position.AFFIRMATIVE,
+        RoundType.REBUTTAL
+      );
+      
       // Create affirmative rebuttal statement
       const affirmativeStatement: Statement = {
         model: debate.affirmativeModel.getModelName(),
@@ -398,6 +622,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
+        RoundType.REBUTTAL
+      );
+      
+      // Extract citations from negative rebuttal (Requirement 12.2)
+      this.extractAndTrackCitations(
+        negativeResponse,
+        debate.negativeModel.getModelName(),
+        Position.NEGATIVE,
         RoundType.REBUTTAL
       );
       
@@ -520,6 +752,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       // Store the cross-examination as a combined statement for each position
       // Affirmative statement includes their question and response
       const affirmativeFullContent = `Question: ${affirmativeQuestion}\n\nResponse to opponent: ${affirmativeResponse}`;
+      
+      // Extract citations from affirmative cross-examination (Requirement 12.2)
+      this.extractAndTrackCitations(
+        affirmativeFullContent,
+        debate.affirmativeModel.getModelName(),
+        Position.AFFIRMATIVE,
+        RoundType.CROSS_EXAM
+      );
+      
       const affirmativeStatement: Statement = {
         model: debate.affirmativeModel.getModelName(),
         position: Position.AFFIRMATIVE,
@@ -530,6 +771,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       
       // Negative statement includes their response and question
       const negativeFullContent = `Response to opponent: ${negativeResponse}\n\nQuestion: ${negativeQuestion}`;
+      
+      // Extract citations from negative cross-examination (Requirement 12.2)
+      this.extractAndTrackCitations(
+        negativeFullContent,
+        debate.negativeModel.getModelName(),
+        Position.NEGATIVE,
+        RoundType.CROSS_EXAM
+      );
+      
       const negativeStatement: Statement = {
         model: debate.negativeModel.getModelName(),
         position: Position.NEGATIVE,
@@ -603,6 +853,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         RoundType.CLOSING
       );
       
+      // Extract citations from affirmative closing (Requirement 12.2)
+      this.extractAndTrackCitations(
+        affirmativeResponse,
+        debate.affirmativeModel.getModelName(),
+        Position.AFFIRMATIVE,
+        RoundType.CLOSING
+      );
+      
       // Create affirmative closing statement
       const affirmativeStatement: Statement = {
         model: debate.affirmativeModel.getModelName(),
@@ -618,6 +876,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
+        RoundType.CLOSING
+      );
+      
+      // Extract citations from negative closing (Requirement 12.2)
+      this.extractAndTrackCitations(
+        negativeResponse,
+        debate.negativeModel.getModelName(),
+        Position.NEGATIVE,
         RoundType.CLOSING
       );
       
@@ -668,15 +934,28 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
 
   /**
    * Transitions debate to COMPLETED state after closing statements
+   * Also passes citations to transcript manager for inclusion in transcript
    */
   async completeDebate(debate: Debate): Promise<Debate> {
     this.validateTransition(debate.state, DebateState.COMPLETED);
+    
+    // Pass citations to transcript manager for inclusion in transcript
+    const allCitations = this.citationTracker.getAllCitations();
+    this.transcriptManager.setCitations(allCitations);
     
     return {
       ...debate,
       state: DebateState.COMPLETED,
       completedAt: new Date()
     };
+  }
+
+  /**
+   * Gets all tracked citations
+   * @returns Array of all citations tracked during the debate
+   */
+  getCitations(): any[] {
+    return this.citationTracker.getAllCitations();
   }
 
   /**
@@ -960,5 +1239,52 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     // Transition to ERROR state
     updatedDebate.state = DebateState.ERROR;
     Object.assign(debate, updatedDebate);
+  }
+
+  /**
+   * Extracts citations from a statement and adds them to the citation tracker.
+   * Requirements: 12.2 - Extract and record citations from statements
+   * 
+   * @param content - The statement content to extract citations from
+   * @param model - The model name that generated the statement
+   * @param position - The debate position
+   * @param round - The round type
+   */
+  private extractAndTrackCitations(
+    content: string,
+    model: string,
+    position: Position,
+    round: RoundType
+  ): void {
+    // Extract citations from the statement content
+    const citations = this.citationExtractor.extractCitations(content, model, position, round);
+    
+    // Add citations to the tracker (automatically deduplicates)
+    this.citationTracker.addCitations(citations);
+  }
+
+  /**
+   * Displays the bibliography at the end of the debate.
+   * Requirements: 12.1, 12.3, 12.4, 12.5 - Display bibliography with all citations
+   */
+  displayBibliography(): void {
+    const allCitations = this.citationTracker.getAllCitations();
+    
+    if (allCitations.length === 0) {
+      return; // No citations to display
+    }
+
+    // Generate and display the formatted bibliography
+    const bibliography = this.bibliographyGenerator.generateBibliography(allCitations);
+    console.log('\n');
+    console.log(bibliography);
+  }
+
+  /**
+   * Resets the citation tracker for a new debate.
+   * Should be called when initializing a new debate.
+   */
+  resetCitationTracking(): void {
+    this.citationTracker.clear();
   }
 }

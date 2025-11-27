@@ -203,36 +203,80 @@ export class ProviderRegistry {
     // We use a default model just to instantiate the provider
     let tempProvider: AIModelProvider;
 
-    switch (normalizedType) {
-      case 'openai': {
-        const apiKey = this.apiKeys.openaiApiKey || process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-          throw new Error('OpenAI API key not found');
+    try {
+      switch (normalizedType) {
+        case 'openai': {
+          const apiKey = this.apiKeys.openaiApiKey || process.env.OPENAI_API_KEY;
+          if (!apiKey) {
+            throw new Error('OpenAI API key not found');
+          }
+          tempProvider = new OpenAIProvider({ apiKey, model: 'gpt-4' });
+          break;
         }
-        tempProvider = new OpenAIProvider({ apiKey, model: 'gpt-4' });
-        break;
-      }
 
-      case 'anthropic': {
-        const apiKey = this.apiKeys.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
-        if (!apiKey) {
-          throw new Error('Anthropic API key not found');
+        case 'anthropic': {
+          const apiKey = this.apiKeys.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
+          if (!apiKey) {
+            throw new Error('Anthropic API key not found');
+          }
+          tempProvider = new AnthropicProvider({ apiKey, model: 'claude-3-5-sonnet-20241022' });
+          break;
         }
-        tempProvider = new AnthropicProvider({ apiKey, model: 'claude-3-5-sonnet-20241022' });
-        break;
+
+        case 'ollama': {
+          const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+          tempProvider = new LocalModelProvider({ baseUrl, model: 'llama2', apiFormat: 'ollama' });
+          break;
+        }
+
+        default:
+          throw new Error(`Unknown provider type: ${providerType}`);
       }
 
-      case 'ollama': {
-        const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-        tempProvider = new LocalModelProvider({ baseUrl, model: 'llama2', apiFormat: 'ollama' });
-        break;
+      // Attempt to list models with error handling
+      const models = await tempProvider.listAvailableModels();
+      
+      // Handle case where provider returns empty list
+      if (!models || models.length === 0) {
+        throw new Error(`No models available from ${providerType}. Please check that the provider is running and accessible.`);
       }
-
-      default:
-        throw new Error(`Unknown provider type: ${providerType}`);
+      
+      return models;
+    } catch (error) {
+      // Enhance error messages with recovery suggestions
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        
+        // Network/connection errors
+        if (message.includes('fetch') || message.includes('network') || message.includes('econnrefused') || message.includes('timeout')) {
+          if (normalizedType === 'ollama') {
+            throw new Error(`Failed to connect to Ollama server. Please ensure Ollama is running at ${process.env.OLLAMA_BASE_URL || 'http://localhost:11434'}. You can start it with: ollama serve`);
+          } else {
+            throw new Error(`Failed to connect to ${providerType} API. Please check your internet connection and try again.`);
+          }
+        }
+        
+        // Authentication errors
+        if (message.includes('401') || message.includes('403') || message.includes('unauthorized') || message.includes('api key')) {
+          throw new Error(`Authentication failed for ${providerType}. Please verify your API key is correct and has the necessary permissions.`);
+        }
+        
+        // Rate limiting
+        if (message.includes('429') || message.includes('rate limit')) {
+          throw new Error(`Rate limit exceeded for ${providerType}. Please wait a moment and try again.`);
+        }
+        
+        // Server errors
+        if (message.includes('500') || message.includes('502') || message.includes('503')) {
+          throw new Error(`${providerType} service is temporarily unavailable. Please try again in a few moments.`);
+        }
+        
+        // Re-throw with original message if no specific handling
+        throw error;
+      }
+      
+      throw new Error(`Failed to fetch models from ${providerType}: Unknown error occurred`);
     }
-
-    return await tempProvider.listAvailableModels();
   }
 
   /**
@@ -243,15 +287,23 @@ export class ProviderRegistry {
    * @throws Error if provider has no available models or is not configured
    */
   async getRandomModel(providerType: string): Promise<ModelInfo> {
-    const models = await this.getModelsForProvider(providerType);
-    
-    if (models.length === 0) {
-      throw new Error(`No models available for provider: ${providerType}`);
-    }
+    try {
+      const models = await this.getModelsForProvider(providerType);
+      
+      if (!models || models.length === 0) {
+        throw new Error(`No models available for random selection from ${providerType}. Please select a specific model or choose a different provider.`);
+      }
 
-    // Use cryptographically secure random selection
-    const randomIndex = Math.floor(Math.random() * models.length);
-    return models[randomIndex];
+      // Use cryptographically secure random selection
+      const randomIndex = Math.floor(Math.random() * models.length);
+      return models[randomIndex];
+    } catch (error) {
+      // If getModelsForProvider already threw a detailed error, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Failed to get random model from ${providerType}: Unknown error occurred`);
+    }
   }
 
   /**

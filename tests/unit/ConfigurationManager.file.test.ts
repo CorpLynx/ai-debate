@@ -30,23 +30,28 @@ describe('ConfigurationManager - File Loading', () => {
     
     fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
     
-    const loaded = configManager.loadFromFile(testConfigPath);
+    const result = configManager.loadFromFile(testConfigPath);
     
-    expect(loaded.timeLimit).toBe(120);
-    expect(loaded.wordLimit).toBe(500);
-    expect(loaded.strictMode).toBe(true);
+    expect(result.config.timeLimit).toBe(120);
+    expect(result.config.wordLimit).toBe(500);
+    expect(result.config.strictMode).toBe(true);
+    expect(result.warnings).toHaveLength(0);
   });
 
   test('should return empty object if file does not exist', () => {
-    const loaded = configManager.loadFromFile('/nonexistent/path/.debaterc');
-    expect(loaded).toEqual({});
+    const result = configManager.loadFromFile('/nonexistent/path/.debaterc');
+    expect(result.config).toEqual({});
+    expect(result.warnings).toHaveLength(0);
   });
 
-  test('should handle invalid JSON gracefully', () => {
+  test('should handle invalid JSON gracefully and display warning', () => {
     fs.writeFileSync(testConfigPath, 'invalid json {');
     
-    const loaded = configManager.loadFromFile(testConfigPath);
-    expect(loaded).toEqual({});
+    const result = configManager.loadFromFile(testConfigPath);
+    expect(result.config).toEqual({});
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('invalid JSON format');
+    expect(result.warnings[0]).toContain('Using default values');
   });
 
   test('should load all supported configuration options', () => {
@@ -60,13 +65,14 @@ describe('ConfigurationManager - File Loading', () => {
     
     fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
     
-    const loaded = configManager.loadFromFile(testConfigPath);
+    const result = configManager.loadFromFile(testConfigPath);
     
-    expect(loaded.timeLimit).toBe(90);
-    expect(loaded.wordLimit).toBe(400);
-    expect(loaded.strictMode).toBe(false);
-    expect(loaded.showPreparation).toBe(false);
-    expect(loaded.numCrossExamQuestions).toBe(5);
+    expect(result.config.timeLimit).toBe(90);
+    expect(result.config.wordLimit).toBe(400);
+    expect(result.config.strictMode).toBe(false);
+    expect(result.config.showPreparation).toBe(false);
+    expect(result.config.numCrossExamQuestions).toBe(5);
+    expect(result.warnings).toHaveLength(0);
   });
 
   test('should ignore unknown properties in config file', () => {
@@ -78,11 +84,51 @@ describe('ConfigurationManager - File Loading', () => {
     
     fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
     
-    const loaded = configManager.loadFromFile(testConfigPath);
+    const result = configManager.loadFromFile(testConfigPath);
     
-    expect(loaded.timeLimit).toBe(120);
-    expect((loaded as any).unknownProperty).toBeUndefined();
-    expect((loaded as any).anotherUnknown).toBeUndefined();
+    expect(result.config.timeLimit).toBe(120);
+    expect((result.config as any).unknownProperty).toBeUndefined();
+    expect((result.config as any).anotherUnknown).toBeUndefined();
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  test('should display warning for file read errors', () => {
+    // Try to read from a directory instead of a file
+    const dirPath = path.join(__dirname, 'test-dir');
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath);
+    }
+    
+    const result = configManager.loadFromFile(dirPath);
+    
+    expect(result.config).toEqual({});
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('error reading configuration file');
+    expect(result.warnings[0]).toContain('Using default values');
+    
+    // Clean up
+    fs.rmdirSync(dirPath);
+  });
+
+  test('should handle missing individual parameters by using defaults', () => {
+    const testConfig = {
+      timeLimit: 120
+      // Other parameters are missing
+    };
+    
+    fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
+    
+    const result = configManager.loadFromFile(testConfigPath);
+    
+    // Specified parameter should be loaded
+    expect(result.config.timeLimit).toBe(120);
+    
+    // Missing parameters should not be in the config (will use defaults later)
+    expect(result.config.wordLimit).toBeUndefined();
+    expect(result.config.strictMode).toBeUndefined();
+    
+    // No warnings for missing parameters (this is expected behavior)
+    expect(result.warnings).toHaveLength(0);
   });
 });
 
@@ -330,6 +376,117 @@ describe('ConfigurationManager - API Key Merging', () => {
     // CLI OpenAI should win, env Anthropic should win over file
     expect(merged.openaiApiKey).toBe('sk-cli-openai-key');
     expect(merged.anthropicApiKey).toBe('sk-ant-env-anthropic-key');
+  });
+});
+
+describe('ConfigurationManager - Error Handling in loadAndMerge', () => {
+  const testConfigPath = path.join(__dirname, '.debaterc.test');
+  let configManager: ConfigurationManager;
+
+  beforeEach(() => {
+    configManager = new ConfigurationManager();
+    // Clean up any existing test config
+    if (fs.existsSync(testConfigPath)) {
+      fs.unlinkSync(testConfigPath);
+    }
+  });
+
+  afterEach(() => {
+    // Clean up test config
+    if (fs.existsSync(testConfigPath)) {
+      fs.unlinkSync(testConfigPath);
+    }
+  });
+
+  test('should handle missing configuration file by using defaults', () => {
+    const result = configManager.loadAndMerge({}, '/nonexistent/path/.debaterc');
+    
+    // Should use default config
+    expect(result.config.timeLimit).toBe(120);
+    expect(result.config.wordLimit).toBe(500);
+    
+    // No warnings for missing file (expected behavior)
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  test('should handle invalid JSON format and display warning', () => {
+    fs.writeFileSync(testConfigPath, 'invalid json {');
+    
+    const result = configManager.loadAndMerge({}, testConfigPath);
+    
+    // Should use default config
+    expect(result.config.timeLimit).toBe(120);
+    expect(result.config.wordLimit).toBe(500);
+    
+    // Should have warning about invalid JSON
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings.some(w => w.includes('invalid JSON format'))).toBe(true);
+  });
+
+  test('should handle invalid individual parameters and display warnings', () => {
+    const testConfig = {
+      timeLimit: -50, // invalid
+      wordLimit: 300, // valid
+      strictMode: 'not a boolean' // invalid
+    };
+    
+    fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
+    
+    const result = configManager.loadAndMerge({}, testConfigPath);
+    
+    // Valid parameter should be used
+    expect(result.config.wordLimit).toBe(300);
+    
+    // Invalid parameters should fall back to defaults
+    expect(result.config.timeLimit).toBe(120); // default
+    expect(result.config.strictMode).toBe(false); // default
+    
+    // Should have warnings for invalid parameters
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings.some(w => w.includes('timeLimit'))).toBe(true);
+    expect(result.warnings.some(w => w.includes('strictMode'))).toBe(true);
+    
+    // Should track invalid parameters
+    expect(result.invalidParams).toContain('timeLimit');
+    expect(result.invalidParams).toContain('strictMode');
+  });
+
+  test('should handle missing individual parameters by using defaults', () => {
+    const testConfig = {
+      timeLimit: 90
+      // Other parameters missing
+    };
+    
+    fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
+    
+    const result = configManager.loadAndMerge({}, testConfigPath);
+    
+    // Specified parameter should be used
+    expect(result.config.timeLimit).toBe(90);
+    
+    // Missing parameters should use defaults
+    expect(result.config.wordLimit).toBe(500); // default
+    expect(result.config.strictMode).toBe(false); // default
+    expect(result.config.showPreparation).toBe(true); // default
+    
+    // No warnings for missing parameters (expected behavior)
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  test('should combine warnings from file loading and validation', () => {
+    const testConfig = {
+      timeLimit: -10, // invalid
+      wordLimit: 0 // invalid
+    };
+    
+    fs.writeFileSync(testConfigPath, JSON.stringify(testConfig, null, 2));
+    
+    const result = configManager.loadAndMerge({}, testConfigPath);
+    
+    // Should have warnings for both invalid parameters
+    expect(result.warnings.length).toBeGreaterThanOrEqual(2);
+    expect(result.warnings.some(w => w.includes('timeLimit'))).toBe(true);
+    expect(result.warnings.some(w => w.includes('wordLimit'))).toBe(true);
   });
 });
 

@@ -13,6 +13,7 @@ import { RoundType } from '../models/RoundType';
 import { DebateState } from '../models/DebateState';
 import { ConfigurationManager } from '../utils/ConfigurationManager';
 import { TranscriptManagerImpl } from '../transcript/TranscriptManager';
+import { InteractiveCLI, SessionConfig } from './InteractiveCLI';
 
 /**
  * CLI Interface for the AI Debate System
@@ -53,7 +54,122 @@ program
   });
 
 /**
- * Main function to run a debate
+ * Run a debate from an interactive session configuration
+ * 
+ * Requirements:
+ * - 1.1: Pass configured session to debate orchestrator
+ */
+async function runDebateFromSession(sessionConfig: SessionConfig): Promise<void> {
+  const { topic, debateConfig, affirmativeModelProvider, negativeModelProvider } = sessionConfig;
+  
+  // Display topic confirmation
+  console.log('\n🎯 Debate Topic:', topic);
+  console.log('');
+  
+  // Display model assignments
+  console.log('📋 Model Assignments:');
+  console.log(`   Affirmative: ${affirmativeModelProvider.getModelName()}`);
+  console.log(`   Negative: ${negativeModelProvider.getModelName()}`);
+  console.log('');
+  
+  // Initialize orchestrator
+  const orchestrator = new DebateOrchestratorImpl();
+  
+  // Initialize debate
+  let debate = orchestrator.initializeDebate(topic, debateConfig, affirmativeModelProvider, negativeModelProvider);
+  
+  // Display configuration
+  displayConfiguration(debateConfig);
+  
+  // Execute debate rounds with progress display
+  try {
+    // Preparation phase
+    console.log('\n🔬 Preparation Phase');
+    console.log('═'.repeat(80));
+    debate = await executeRoundWithProgress(
+      orchestrator,
+      debate,
+      'executePreparation',
+      RoundType.PREPARATION,
+      debateConfig.showPreparation
+    );
+    
+    // Opening statements
+    console.log('\n📢 Opening Statements');
+    console.log('═'.repeat(80));
+    debate = await executeRoundWithProgress(
+      orchestrator,
+      debate,
+      'executeOpeningStatements',
+      RoundType.OPENING,
+      true
+    );
+    
+    // Rebuttals
+    console.log('\n🔄 Rebuttals');
+    console.log('═'.repeat(80));
+    debate = await executeRoundWithProgress(
+      orchestrator,
+      debate,
+      'executeRebuttals',
+      RoundType.REBUTTAL,
+      true
+    );
+    
+    // Cross-examination
+    console.log('\n❓ Cross-Examination');
+    console.log('═'.repeat(80));
+    debate = await executeRoundWithProgress(
+      orchestrator,
+      debate,
+      'executeCrossExamination',
+      RoundType.CROSS_EXAM,
+      true
+    );
+    
+    // Closing statements
+    console.log('\n🎬 Closing Statements');
+    console.log('═'.repeat(80));
+    debate = await executeRoundWithProgress(
+      orchestrator,
+      debate,
+      'executeClosingStatements',
+      RoundType.CLOSING,
+      true
+    );
+    
+    // Mark debate as completed
+    debate = await orchestrator.completeDebate(debate);
+    
+    // Display completion message
+    console.log('\n✅ Debate Completed!');
+    console.log('═'.repeat(80));
+    
+    // Display bibliography (Requirements 12.1, 12.3, 12.4, 12.5)
+    orchestrator.displayBibliography();
+    
+    // Generate and display/export transcript
+    await exportTranscript(debate, 'text');
+    
+  } catch (error) {
+    console.error('\n❌ Debate encountered an error:', (error as Error).message);
+    console.log('\n💾 Attempting to save partial transcript...');
+    
+    // Try to save partial transcript
+    try {
+      const transcriptManager = new TranscriptManagerImpl();
+      const filePath = await transcriptManager.savePartialTranscript(debate);
+      console.log(`✅ Partial transcript saved to: ${filePath}`);
+    } catch (saveError) {
+      console.error('❌ Failed to save partial transcript:', (saveError as Error).message);
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Main function to run a debate from command-line arguments
  */
 async function runDebate(topic: string, options: any): Promise<void> {
   // Parse configuration from CLI options
@@ -151,6 +267,9 @@ async function runDebate(topic: string, options: any): Promise<void> {
     // Display completion message
     console.log('\n✅ Debate Completed!');
     console.log('═'.repeat(80));
+    
+    // Display bibliography (Requirements 12.1, 12.3, 12.4, 12.5)
+    orchestrator.displayBibliography();
     
     // Generate and display/export transcript (Requirement 8.3)
     await exportTranscript(debate, options.export);
@@ -270,24 +389,37 @@ async function initializeModels(options: any): Promise<AIModelProvider[]> {
 }
 
 /**
- * Displays the current configuration
+ * Displays the current configuration with enhanced formatting
+ * Requirements: 6.2, 9.1
  */
 function displayConfiguration(config: DebateConfig): void {
-  console.log('⚙️  Configuration:');
-  console.log(`   Time Limit: ${config.timeLimit}s per response`);
-  console.log(`   Word Limit: ${config.wordLimit} words per statement`);
-  console.log(`   Strict Mode: ${config.strictMode ? 'Enabled' : 'Disabled'}`);
-  console.log(`   Show Preparation: ${config.showPreparation ? 'Yes' : 'No'}`);
-  console.log(`   Cross-Exam Questions: ${config.numCrossExamQuestions} per side`);
+  const { displayConfigSection } = require('../utils/DisplayUtils');
+  
+  const configItems = {
+    'Time Limit': `${config.timeLimit}s per response`,
+    'Word Limit': `${config.wordLimit} words per statement`,
+    'Strict Mode': config.strictMode ? 'Enabled' : 'Disabled',
+    'Show Preparation': config.showPreparation ? 'Yes' : 'No',
+    'Cross-Exam Questions': `${config.numCrossExamQuestions} per side`
+  };
+  
+  console.log(displayConfigSection('⚙️  Configuration', configItems));
 }
 
 /**
- * Executes a debate round with progress indicators and statement display
+ * Executes a debate round with progress indicators and enhanced statement display
  * 
  * Requirements:
+ * - 1.5: Apply consistent indentation and margins
+ * - 2.1: Display visually prominent round header with decorative elements
+ * - 2.2: Use distinct visual styling for metadata versus content
+ * - 2.3: Use clear visual separators between statements
+ * - 2.4: Use consistent color coding for positions
+ * - 2.5: Display round progress in clear format
  * - 7.1: Display statements immediately after generation
  * - 7.2, 7.3: Clearly indicate model, position, and round type
  * - 7.4: Show status indicator while model is generating
+ * - All UI polish requirements for rich text formatting and responsive layout
  */
 async function executeRoundWithProgress(
   orchestrator: DebateOrchestratorImpl,
@@ -296,26 +428,37 @@ async function executeRoundWithProgress(
   roundType: RoundType,
   displayStatements: boolean
 ): Promise<any> {
-  // Show thinking indicator for affirmative model (Requirement 7.4)
-  console.log(formatThinkingIndicator(
-    debate.affirmativeModel.getModelName(),
-    debate.affirmativeModel === debate.affirmativeModel ? 'affirmative' as any : 'negative' as any,
-    roundType
-  ));
-  
-  // Execute the round
+  // Execute the round (streaming handler will display progress indicators)
   const updatedDebate = await (orchestrator as any)[method](debate);
   
-  // Display statements if requested (Requirements 7.1, 7.2, 7.3)
+  // Display statements if requested with enhanced formatting
+  // (Requirements 7.1, 7.2, 7.3, 2.5, and all UI polish requirements)
   if (displayStatements) {
     const currentRound = updatedDebate.rounds[updatedDebate.rounds.length - 1];
     
+    // Calculate round progress (Requirement 2.5)
+    // Total rounds: preparation, opening, rebuttal, cross-exam, closing = 5
+    const totalRounds = 5;
+    const currentRoundNumber = updatedDebate.rounds.length;
+    
+    // Display affirmative statement with rich text formatting and responsive layout
     if (currentRound.affirmativeStatement) {
-      console.log(formatStatement(currentRound.affirmativeStatement, roundType));
+      console.log(formatStatement(
+        currentRound.affirmativeStatement, 
+        roundType,
+        currentRoundNumber,
+        totalRounds
+      ));
     }
     
+    // Display negative statement with rich text formatting and responsive layout
     if (currentRound.negativeStatement) {
-      console.log(formatStatement(currentRound.negativeStatement, roundType));
+      console.log(formatStatement(
+        currentRound.negativeStatement, 
+        roundType,
+        currentRoundNumber,
+        totalRounds
+      ));
     }
   }
   
@@ -323,28 +466,71 @@ async function executeRoundWithProgress(
 }
 
 /**
- * Exports the debate transcript in the specified format
+ * Exports the debate transcript in the specified format with enhanced formatting
  * 
- * Requirement 8.3: Display or export the complete debate transcript
+ * Requirements: 8.3, 4.1, 4.2, 4.3, 4.4, 4.5
  */
 async function exportTranscript(debate: any, format: string): Promise<void> {
   const transcriptManager = new TranscriptManagerImpl();
+  const { displaySummaryBox, displayConfirmation } = require('../utils/DisplayUtils');
   
   // Generate transcript
   const transcript = transcriptManager.generateTranscript(debate);
   
   // Save to file (always saves as JSON internally)
   const filePath = await transcriptManager.saveTranscript(transcript);
-  console.log(`\n💾 Transcript saved to: ${filePath}`);
+  console.log(displayConfirmation('Transcript saved', filePath));
   
-  // Display summary
-  console.log('\n📊 Debate Summary:');
-  console.log(`   Topic: ${transcript.summary.topic}`);
-  console.log(`   Affirmative: ${transcript.summary.models.affirmative}`);
-  console.log(`   Negative: ${transcript.summary.models.negative}`);
-  console.log(`   Duration: ${Math.round(transcript.summary.totalDuration)}s`);
-  console.log(`   Rounds: ${transcript.summary.roundCount}`);
+  // Display enhanced summary with formatted box (Requirements 4.3, 4.4, 4.5)
+  const summaryData = [
+    {
+      title: '📊 Debate Summary',
+      items: {
+        'Topic': transcript.summary.topic,
+        'Affirmative': transcript.summary.models.affirmative,
+        'Negative': transcript.summary.models.negative,
+        'Duration': `${Math.round(transcript.summary.totalDuration)}s`,
+        'Rounds': transcript.summary.roundCount.toString()
+      }
+    }
+  ];
+  
+  console.log(displaySummaryBox('Debate Complete', summaryData));
 }
 
-// Parse command line arguments
-program.parse();
+/**
+ * Main entry point - detects interactive vs argument-based mode
+ * 
+ * Requirement 1.1: Enter interactive mode when application is run without arguments
+ */
+async function main() {
+  // Check if running without arguments (only node and script path)
+  // process.argv[0] = node, process.argv[1] = script path
+  const hasArguments = process.argv.length > 2;
+  
+  if (!hasArguments) {
+    // Launch interactive mode (Requirement 1.1)
+    try {
+      const interactiveCLI = new InteractiveCLI();
+      const sessionConfig = await interactiveCLI.start();
+      
+      if (!sessionConfig) {
+        // User cancelled
+        console.log('\n👋 Debate cancelled. Goodbye!\n');
+        process.exit(0);
+      }
+      
+      // Run debate with interactive configuration
+      await runDebateFromSession(sessionConfig);
+    } catch (error) {
+      console.error('\n❌ Error:', (error as Error).message);
+      process.exit(1);
+    }
+  } else {
+    // Parse command line arguments (backward compatibility)
+    program.parse();
+  }
+}
+
+// Start the application
+main();

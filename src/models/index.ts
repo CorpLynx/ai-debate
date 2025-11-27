@@ -9,3 +9,8 @@ export * from './Debate';
 export * from './Transcript';
 export * from './ValidationResult';
 export * from './DebateError';
+export * from './ColorScheme';
+export * from './FormattingRules';
+export * from './UIConfig';
+export * from './ProgressBar';
+export * from './Citation';

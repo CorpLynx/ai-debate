@@ -1,4 +1,5 @@
 import { Debate } from './Debate';
+import { Citation } from './Citation';
 
 export interface TranscriptSummary {
   topic: string;
@@ -18,6 +19,7 @@ export interface Transcript {
   debate: Debate;
   formattedRounds: FormattedRound[];
   summary: TranscriptSummary;
+  citations?: Citation[];
 }
 
 export enum OutputFormat {
