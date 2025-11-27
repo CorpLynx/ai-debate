@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "1ad71ddc-a902-468a-9f7c-d7952070de10",
+    "topic": "mii`",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:05:44.038Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "mii`",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:05:44.038Z",
+      "message": "u>tQGuzgm/fE[x#'}",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:05:44.038Z",
+      "message": "u>tQGuzgm/fE[x#'}",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

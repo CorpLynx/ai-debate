@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "e7d22ffb-92f9-4ac7-b0b2-da21a92b4168",
+    "topic": "2c$N^cPaU!",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:46:22.048Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "2c$N^cPaU!",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:46:22.048Z",
+      "message": "w{y #p~$$G!64",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:46:22.049Z",
+      "message": "w{y #p~$$G!64",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

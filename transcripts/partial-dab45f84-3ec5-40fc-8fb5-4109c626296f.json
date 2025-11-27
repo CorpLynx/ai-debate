@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "dab45f84-3ec5-40fc-8fb5-4109c626296f",
+    "topic": "!",
+    "config": {
+      "timeLimit": 1,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:37:06.464Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "!",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:37:08.972Z",
+      "message": "Request failed after retry: Model generation timeout after 1500ms",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:37:08.984Z",
+      "message": "Request failed after retry: Model generation timeout after 1500ms",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

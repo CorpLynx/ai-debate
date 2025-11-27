@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "8f022873-39dc-4551-b9c9-50168e29b0cd",
+    "topic": "Bnb]@&.,Sa",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:32:28.296Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Bnb]@&.,Sa",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:32:28.297Z",
+      "message": "apply",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:32:28.297Z",
+      "message": "apply",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

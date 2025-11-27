@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "5ca5634d-1961-4091-a487-81c4bea097d2",
+    "topic": "kyw>KW|jy ",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:54:54.639Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "kyw>KW|jy ",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:54:54.639Z",
+      "message": "ukeS1lJc4y/5O!+p:S A",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:54:54.640Z",
+      "message": "ukeS1lJc4y/5O!+p:S A",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

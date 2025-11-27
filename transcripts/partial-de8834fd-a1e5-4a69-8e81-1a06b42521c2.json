@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "de8834fd-a1e5-4a69-8e81-1a06b42521c2",
+    "topic": "F6LbK3SxhH`",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:56:04.504Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "F6LbK3SxhH`",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:56:04.504Z",
+      "message": "Xj5s5ghOb<?@cey{;ot",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:56:04.504Z",
+      "message": "Xj5s5ghOb<?@cey{;ot",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

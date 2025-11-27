@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "c2c02296-e813-4d4e-b785-9a348e0ff036",
+    "topic": "Xfv2$",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:43:46.201Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Xfv2$",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:43:46.201Z",
+      "message": "C{uy}e[a:'",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:43:46.202Z",
+      "message": "C{uy}e[a:'",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

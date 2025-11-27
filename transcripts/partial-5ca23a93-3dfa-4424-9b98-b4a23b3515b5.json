@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "5ca23a93-3dfa-4424-9b98-b4a23b3515b5",
+    "topic": "toLo",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:29:31.767Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "toLo",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:29:31.767Z",
+      "message": "?a##W(wIxh",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:29:31.768Z",
+      "message": "?a##W(wIxh",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

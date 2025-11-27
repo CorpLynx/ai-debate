@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "fa014681-25f2-42d3-a73b-001e6554263b",
+    "topic": "XZkSoz",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:01:00.040Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "XZkSoz",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:01:00.040Z",
+      "message": "o:5;H-^#%+r-I",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:01:00.041Z",
+      "message": "o:5;H-^#%+r-I",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

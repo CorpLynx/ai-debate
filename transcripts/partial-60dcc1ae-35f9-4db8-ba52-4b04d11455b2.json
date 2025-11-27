@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "60dcc1ae-35f9-4db8-ba52-4b04d11455b2",
+    "topic": "S3G,Qm#",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:53:09.629Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "S3G,Qm#",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:53:09.629Z",
+      "message": "{&_cZ6Y",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:53:09.631Z",
+      "message": "{&_cZ6Y",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

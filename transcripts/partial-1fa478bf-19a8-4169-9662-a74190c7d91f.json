@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "1fa478bf-19a8-4169-9662-a74190c7d91f",
+    "topic": "appl",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:56:50.022Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "appl",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:56:50.022Z",
+      "message": "\"jhPok54Nz&!{H3",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:56:50.022Z",
+      "message": "\"jhPok54Nz&!{H3",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

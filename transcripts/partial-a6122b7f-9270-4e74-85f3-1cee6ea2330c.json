@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "a6122b7f-9270-4e74-85f3-1cee6ea2330c",
+    "topic": "Sd)5vx",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:29:31.743Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Sd)5vx",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:29:31.743Z",
+      "message": "D=%ao 9`pry{|wd2!&<\"",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:29:31.744Z",
+      "message": "D=%ao 9`pry{|wd2!&<\"",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

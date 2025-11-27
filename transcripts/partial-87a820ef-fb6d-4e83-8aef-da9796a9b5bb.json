@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "87a820ef-fb6d-4e83-8aef-da9796a9b5bb",
+    "topic": "z/Z^P4_7",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:30:25.671Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "z/Z^P4_7",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:30:25.671Z",
+      "message": "BLPb>sQI",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:30:25.672Z",
+      "message": "BLPb>sQI",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

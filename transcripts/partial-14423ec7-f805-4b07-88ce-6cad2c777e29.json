@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "14423ec7-f805-4b07-88ce-6cad2c777e29",
+    "topic": "hzKc$XP1Ic",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:36:40.428Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "hzKc$XP1Ic",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:36:40.428Z",
+      "message": "h6ik\"6:\\f1&",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:36:40.431Z",
+      "message": "h6ik\"6:\\f1&",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

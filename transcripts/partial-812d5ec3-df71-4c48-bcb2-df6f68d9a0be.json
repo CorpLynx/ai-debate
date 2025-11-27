@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "812d5ec3-df71-4c48-bcb2-df6f68d9a0be",
+    "topic": "Nd0-G",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:30:47.965Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Nd0-G",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:30:47.965Z",
+      "message": "o\\Kw*",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:30:47.965Z",
+      "message": "o\\Kw*",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

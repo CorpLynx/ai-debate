@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "bb42548a-16a7-455a-a7cc-92f2647e7409",
+    "topic": "m5gegn",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:54:06.676Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "m5gegn",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:54:06.676Z",
+      "message": "b\\<<3h~#KGN\"@9{d<p",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:54:06.677Z",
+      "message": "b\\<<3h~#KGN\"@9{d<p",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

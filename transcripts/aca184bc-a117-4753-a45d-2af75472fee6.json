@@ -1,0 +1,145 @@
+{
+  "debate": {
+    "id": "aca184bc-a117-4753-a45d-2af75472fee6",
+    "topic": "Should AI be regulated?",
+    "config": {
+      "timeLimit": 120,
+      "wordLimit": 50,
+      "strictMode": false,
+      "showPreparation": false,
+      "numCrossExamQuestions": 1
+    },
+    "affirmativeModelName": "MockGPT-4",
+    "negativeModelName": "MockClaude",
+    "state": "completed",
+    "rounds": [
+      {
+        "type": "preparation",
+        "affirmativeStatement": {
+          "model": "MockGPT-4",
+          "position": "affirmative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "negativeStatement": {
+          "model": "MockClaude",
+          "position": "negative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "timestamp": "2025-11-27T00:26:55.695Z"
+      },
+      {
+        "type": "opening",
+        "affirmativeStatement": {
+          "model": "MockGPT-4",
+          "position": "affirmative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "negativeStatement": {
+          "model": "MockClaude",
+          "position": "negative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "timestamp": "2025-11-27T00:26:55.695Z"
+      },
+      {
+        "type": "rebuttal",
+        "affirmativeStatement": {
+          "model": "MockGPT-4",
+          "position": "affirmative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "negativeStatement": {
+          "model": "MockClaude",
+          "position": "negative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "timestamp": "2025-11-27T00:26:55.695Z"
+      },
+      {
+        "type": "cross_exam",
+        "affirmativeStatement": {
+          "model": "MockGPT-4",
+          "position": "affirmative",
+          "content": "Question: I am arguing from the affirmative position...\n\nResponse to opponent: I am arguing from the affirmative position...",
+          "wordCount": 18,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "negativeStatement": {
+          "model": "MockClaude",
+          "position": "negative",
+          "content": "Response to opponent: I am arguing from the negative position...\n\nQuestion: I am arguing from the negative position...",
+          "wordCount": 18,
+          "generatedAt": "2025-11-27T00:26:55.695Z"
+        },
+        "timestamp": "2025-11-27T00:26:55.695Z"
+      },
+      {
+        "type": "closing",
+        "affirmativeStatement": {
+          "model": "MockGPT-4",
+          "position": "affirmative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.696Z"
+        },
+        "negativeStatement": {
+          "model": "MockClaude",
+          "position": "negative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T00:26:55.696Z"
+        },
+        "timestamp": "2025-11-27T00:26:55.696Z"
+      }
+    ],
+    "createdAt": "2025-11-27T00:26:55.689Z",
+    "completedAt": "2025-11-27T00:26:55.696Z"
+  },
+  "formattedRounds": [
+    {
+      "roundType": "opening",
+      "affirmativeContent": "I am arguing from the affirmative position...",
+      "negativeContent": "I am arguing from the negative position...",
+      "timestamp": "2025-11-27T00:26:55.695Z"
+    },
+    {
+      "roundType": "rebuttal",
+      "affirmativeContent": "I am arguing from the affirmative position...",
+      "negativeContent": "I am arguing from the negative position...",
+      "timestamp": "2025-11-27T00:26:55.695Z"
+    },
+    {
+      "roundType": "cross_exam",
+      "affirmativeContent": "Question: I am arguing from the affirmative position...\n\nResponse to opponent: I am arguing from the affirmative position...",
+      "negativeContent": "Response to opponent: I am arguing from the negative position...\n\nQuestion: I am arguing from the negative position...",
+      "timestamp": "2025-11-27T00:26:55.695Z"
+    },
+    {
+      "roundType": "closing",
+      "affirmativeContent": "I am arguing from the affirmative position...",
+      "negativeContent": "I am arguing from the negative position...",
+      "timestamp": "2025-11-27T00:26:55.696Z"
+    }
+  ],
+  "summary": {
+    "topic": "Should AI be regulated?",
+    "models": {
+      "affirmative": "MockGPT-4",
+      "negative": "MockClaude"
+    },
+    "totalDuration": 0.007,
+    "roundCount": 5
+  }
+}

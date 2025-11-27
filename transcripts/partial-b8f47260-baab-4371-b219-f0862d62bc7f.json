@@ -1,0 +1,136 @@
+{
+  "debate": {
+    "id": "b8f47260-baab-4371-b219-f0862d62bc7f",
+    "topic": "F]hCx",
+    "config": {
+      "timeLimit": 120,
+      "wordLimit": 500,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "Model1_!G",
+    "negativeModelName": "Model2_constructor",
+    "state": "rebuttals",
+    "rounds": [
+      {
+        "type": "preparation",
+        "affirmativeStatement": {
+          "model": "Model1_!G",
+          "position": "affirmative",
+          "content": "Mock response from Model1_!G",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_constructor",
+          "position": "negative",
+          "content": "Mock response from Model2_constructor",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.768Z"
+      },
+      {
+        "type": "opening",
+        "affirmativeStatement": {
+          "model": "Model1_!G",
+          "position": "affirmative",
+          "content": "Mock response from Model1_!G",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_constructor",
+          "position": "negative",
+          "content": "Mock response from Model2_constructor",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.768Z"
+      },
+      {
+        "type": "rebuttal",
+        "affirmativeStatement": {
+          "model": "Model1_!G",
+          "position": "affirmative",
+          "content": "Mock response from Model1_!G",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_constructor",
+          "position": "negative",
+          "content": "Mock response from Model2_constructor",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.768Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.768Z"
+      }
+    ],
+    "createdAt": "2025-11-27T00:30:24.768Z"
+  },
+  "formattedRounds": [
+    {
+      "roundType": "preparation",
+      "affirmativeContent": "Mock response from Model1_!G",
+      "negativeContent": "Mock response from Model2_constructor",
+      "timestamp": "2025-11-27T00:30:24.768Z"
+    },
+    {
+      "roundType": "opening",
+      "affirmativeContent": "Mock response from Model1_!G",
+      "negativeContent": "Mock response from Model2_constructor",
+      "timestamp": "2025-11-27T00:30:24.768Z"
+    },
+    {
+      "roundType": "rebuttal",
+      "affirmativeContent": "Mock response from Model1_!G",
+      "negativeContent": "Mock response from Model2_constructor",
+      "timestamp": "2025-11-27T00:30:24.768Z"
+    }
+  ],
+  "summary": {
+    "topic": "F]hCx",
+    "models": {
+      "affirmative": "Model1_!G",
+      "negative": "Model2_constructor"
+    },
+    "totalDuration": 0,
+    "roundCount": 3
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:30:24.769Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "model": "Model2_constructor",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    },
+    {
+      "timestamp": "2025-11-27T00:30:24.791Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    }
+  ]
+}

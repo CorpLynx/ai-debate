@@ -1,0 +1,136 @@
+{
+  "debate": {
+    "id": "fb7feb27-13db-42c7-a674-eab9def69c91",
+    "topic": "!",
+    "config": {
+      "timeLimit": 120,
+      "wordLimit": 500,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "Model1_ ",
+    "negativeModelName": "Model2_h",
+    "state": "rebuttals",
+    "rounds": [
+      {
+        "type": "preparation",
+        "affirmativeStatement": {
+          "model": "Model1_ ",
+          "position": "affirmative",
+          "content": "Mock response from Model1_ ",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_h",
+          "position": "negative",
+          "content": "Mock response from Model2_h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.963Z"
+      },
+      {
+        "type": "opening",
+        "affirmativeStatement": {
+          "model": "Model1_ ",
+          "position": "affirmative",
+          "content": "Mock response from Model1_ ",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_h",
+          "position": "negative",
+          "content": "Mock response from Model2_h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.963Z"
+      },
+      {
+        "type": "rebuttal",
+        "affirmativeStatement": {
+          "model": "Model1_ ",
+          "position": "affirmative",
+          "content": "Mock response from Model1_ ",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_h",
+          "position": "negative",
+          "content": "Mock response from Model2_h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.963Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.963Z"
+      }
+    ],
+    "createdAt": "2025-11-27T00:30:24.963Z"
+  },
+  "formattedRounds": [
+    {
+      "roundType": "preparation",
+      "affirmativeContent": "Mock response from Model1_ ",
+      "negativeContent": "Mock response from Model2_h",
+      "timestamp": "2025-11-27T00:30:24.963Z"
+    },
+    {
+      "roundType": "opening",
+      "affirmativeContent": "Mock response from Model1_ ",
+      "negativeContent": "Mock response from Model2_h",
+      "timestamp": "2025-11-27T00:30:24.963Z"
+    },
+    {
+      "roundType": "rebuttal",
+      "affirmativeContent": "Mock response from Model1_ ",
+      "negativeContent": "Mock response from Model2_h",
+      "timestamp": "2025-11-27T00:30:24.963Z"
+    }
+  ],
+  "summary": {
+    "topic": "!",
+    "models": {
+      "affirmative": "Model1_ ",
+      "negative": "Model2_h"
+    },
+    "totalDuration": 0,
+    "roundCount": 3
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:30:24.964Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "model": "Model1_ ",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    },
+    {
+      "timestamp": "2025-11-27T00:30:24.964Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    }
+  ]
+}

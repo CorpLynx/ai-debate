@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "222e28ec-cb31-4ae5-8fed-7ba4b8811f4e",
+    "topic": "Vh",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:09:07.658Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Vh",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:09:07.658Z",
+      "message": ";S$z yV.$A95zsX$&#+&",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:09:07.659Z",
+      "message": ";S$z yV.$A95zsX$&#+&",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

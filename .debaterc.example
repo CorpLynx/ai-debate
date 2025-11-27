@@ -1,0 +1,7 @@
+{
+  "timeLimit": 60,
+  "wordLimit": 300,
+  "strictMode": false,
+  "showPreparation": true,
+  "numCrossExamQuestions": 3
+}

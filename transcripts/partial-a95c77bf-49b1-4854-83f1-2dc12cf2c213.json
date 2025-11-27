@@ -1,0 +1,136 @@
+{
+  "debate": {
+    "id": "a95c77bf-49b1-4854-83f1-2dc12cf2c213",
+    "topic": "C`b8\"^8*U?]",
+    "config": {
+      "timeLimit": 120,
+      "wordLimit": 500,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "Model1_{;[X/h",
+    "negativeModelName": "Model2_'&ErT2?j!$h",
+    "state": "rebuttals",
+    "rounds": [
+      {
+        "type": "preparation",
+        "affirmativeStatement": {
+          "model": "Model1_{;[X/h",
+          "position": "affirmative",
+          "content": "Mock response from Model1_{;[X/h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_'&ErT2?j!$h",
+          "position": "negative",
+          "content": "Mock response from Model2_'&ErT2?j!$h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.926Z"
+      },
+      {
+        "type": "opening",
+        "affirmativeStatement": {
+          "model": "Model1_{;[X/h",
+          "position": "affirmative",
+          "content": "Mock response from Model1_{;[X/h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_'&ErT2?j!$h",
+          "position": "negative",
+          "content": "Mock response from Model2_'&ErT2?j!$h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.926Z"
+      },
+      {
+        "type": "rebuttal",
+        "affirmativeStatement": {
+          "model": "Model1_{;[X/h",
+          "position": "affirmative",
+          "content": "Mock response from Model1_{;[X/h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "negativeStatement": {
+          "model": "Model2_'&ErT2?j!$h",
+          "position": "negative",
+          "content": "Mock response from Model2_'&ErT2?j!$h",
+          "wordCount": 4,
+          "generatedAt": "2025-11-27T00:30:24.926Z"
+        },
+        "timestamp": "2025-11-27T00:30:24.926Z"
+      }
+    ],
+    "createdAt": "2025-11-27T00:30:24.926Z"
+  },
+  "formattedRounds": [
+    {
+      "roundType": "preparation",
+      "affirmativeContent": "Mock response from Model1_{;[X/h",
+      "negativeContent": "Mock response from Model2_'&ErT2?j!$h",
+      "timestamp": "2025-11-27T00:30:24.926Z"
+    },
+    {
+      "roundType": "opening",
+      "affirmativeContent": "Mock response from Model1_{;[X/h",
+      "negativeContent": "Mock response from Model2_'&ErT2?j!$h",
+      "timestamp": "2025-11-27T00:30:24.926Z"
+    },
+    {
+      "roundType": "rebuttal",
+      "affirmativeContent": "Mock response from Model1_{;[X/h",
+      "negativeContent": "Mock response from Model2_'&ErT2?j!$h",
+      "timestamp": "2025-11-27T00:30:24.926Z"
+    }
+  ],
+  "summary": {
+    "topic": "C`b8\"^8*U?]",
+    "models": {
+      "affirmative": "Model1_{;[X/h",
+      "negative": "Model2_'&ErT2?j!$h"
+    },
+    "totalDuration": 0,
+    "roundCount": 3
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:30:24.926Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "model": "Model1_{;[X/h",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    },
+    {
+      "timestamp": "2025-11-27T00:30:24.927Z",
+      "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+      "state": "rebuttals",
+      "round": "cross_exam",
+      "originalError": {
+        "matcherResult": {
+          "actual": false,
+          "expected": true,
+          "message": "expect(received).toBe(expected) // Object.is equality\n\nExpected: true\nReceived: false",
+          "name": "toBe",
+          "pass": false
+        }
+      }
+    }
+  ]
+}

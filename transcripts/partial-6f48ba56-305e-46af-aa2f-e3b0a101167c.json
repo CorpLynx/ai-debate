@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "6f48ba56-305e-46af-aa2f-e3b0a101167c",
+    "topic": "C5SI",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-27T00:09:07.434Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "C5SI",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-27T00:09:07.434Z",
+      "message": ">';`4#H%b+n_ \",vUw",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-27T00:09:07.437Z",
+      "message": ">';`4#H%b+n_ \",vUw",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

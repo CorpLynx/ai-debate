@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "0c85c626-ba6c-4c4a-8ea9-b727b41b3a72",
+    "topic": "VxP7K[",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:30:48.148Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "VxP7K[",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:30:48.148Z",
+      "message": "Vb]%dMql^'fHK2t",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:30:48.148Z",
+      "message": "Vb]%dMql^'fHK2t",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

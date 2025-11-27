@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "e07a90d1-ae11-4c65-8bc5-c1e9c65e007a",
+    "topic": "OhdRP}5gRv*",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:40:56.969Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "OhdRP}5gRv*",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:40:56.969Z",
+      "message": ")0x!-{9%%,<\"#'z",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:40:56.970Z",
+      "message": ")0x!-{9%%,<\"#'z",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "debate": {
+    "id": "28e0f1d3-d40f-45ec-b34e-76784858ce7c",
+    "topic": "WaPE3",
+    "config": {
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:29:32.077Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "WaPE3",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:29:32.077Z",
+      "message": "-V`yD_,*[GP?J-e ^~",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:29:32.079Z",
+      "message": "-V`yD_,*[GP?J-e ^~",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "debate": {
+    "id": "9eb526c4-fc74-44ed-8ae6-aa6fc3937caf",
+    "topic": "Q8=Zk:Fiek",
+    "config": {
+      "timeLimit": 120,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "AffirmativeModel",
+    "negativeModelName": "NegativeModel",
+    "state": "initialized",
+    "rounds": [],
+    "createdAt": "2025-11-26T23:45:19.728Z"
+  },
+  "formattedRounds": [],
+  "summary": {
+    "topic": "Q8=Zk:Fiek",
+    "models": {
+      "affirmative": "AffirmativeModel",
+      "negative": "NegativeModel"
+    },
+    "totalDuration": 0,
+    "roundCount": 0
+  },
+  "partial": true,
+  "errors": [
+    {
+      "timestamp": "2025-11-26T23:45:19.728Z",
+      "message": "2Q*RJ5A /i^Y2!_",
+      "state": "initialized",
+      "round": "preparation",
+      "model": "NegativeModel",
+      "originalError": {}
+    },
+    {
+      "timestamp": "2025-11-26T23:45:19.729Z",
+      "message": "2Q*RJ5A /i^Y2!_",
+      "state": "initialized",
+      "round": "preparation",
+      "originalError": {}
+    }
+  ]
+}
