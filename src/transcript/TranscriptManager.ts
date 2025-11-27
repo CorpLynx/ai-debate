@@ -78,6 +78,139 @@ export class TranscriptManagerImpl implements TranscriptManager {
   }
 
   /**
+   * Formats a transcript in the specified output format
+   * Supports plain text, markdown, and JSON formats
+   * Preserves all information including metadata, statements, and attribution
+   * 
+   * Requirements:
+   * - 8.3: Display or export the complete Debate Transcript
+   * - 8.4: Preserve formatting and attribution for each statement
+   */
+  formatTranscript(transcript: Transcript, format: OutputFormat): string {
+    switch (format) {
+      case OutputFormat.TEXT:
+        return this.formatAsText(transcript);
+      case OutputFormat.MARKDOWN:
+        return this.formatAsMarkdown(transcript);
+      case OutputFormat.JSON:
+        return this.formatAsJSON(transcript);
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+  }
+
+  /**
+   * Formats transcript as plain text
+   */
+  private formatAsText(transcript: Transcript): string {
+    const lines: string[] = [];
+    
+    // Header
+    lines.push('='.repeat(80));
+    lines.push('DEBATE TRANSCRIPT');
+    lines.push('='.repeat(80));
+    lines.push('');
+    
+    // Summary
+    lines.push(`Topic: ${transcript.summary.topic}`);
+    lines.push(`Affirmative: ${transcript.summary.models.affirmative}`);
+    lines.push(`Negative: ${transcript.summary.models.negative}`);
+    lines.push(`Duration: ${transcript.summary.totalDuration.toFixed(2)}s`);
+    lines.push(`Rounds: ${transcript.summary.roundCount}`);
+    lines.push('');
+    lines.push('='.repeat(80));
+    lines.push('');
+    
+    // Rounds
+    for (const round of transcript.formattedRounds) {
+      lines.push(`[${round.roundType.toUpperCase()}]`);
+      lines.push('-'.repeat(80));
+      
+      if (round.affirmativeContent) {
+        lines.push(`Affirmative (${transcript.summary.models.affirmative}):`);
+        lines.push(round.affirmativeContent);
+        lines.push('');
+      }
+      
+      if (round.negativeContent) {
+        lines.push(`Negative (${transcript.summary.models.negative}):`);
+        lines.push(round.negativeContent);
+        lines.push('');
+      }
+      
+      lines.push('');
+    }
+    
+    return lines.join('\n');
+  }
+
+  /**
+   * Formats transcript as markdown
+   */
+  private formatAsMarkdown(transcript: Transcript): string {
+    const lines: string[] = [];
+    
+    // Header
+    lines.push('# Debate Transcript');
+    lines.push('');
+    
+    // Summary
+    lines.push('## Summary');
+    lines.push('');
+    lines.push(`**Topic:** ${transcript.summary.topic}`);
+    lines.push('');
+    lines.push(`**Participants:**`);
+    lines.push(`- Affirmative: ${transcript.summary.models.affirmative}`);
+    lines.push(`- Negative: ${transcript.summary.models.negative}`);
+    lines.push('');
+    lines.push(`**Duration:** ${transcript.summary.totalDuration.toFixed(2)}s`);
+    lines.push(`**Rounds:** ${transcript.summary.roundCount}`);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    
+    // Rounds
+    for (const round of transcript.formattedRounds) {
+      lines.push(`## ${this.capitalizeRoundType(round.roundType)}`);
+      lines.push('');
+      
+      if (round.affirmativeContent) {
+        lines.push(`### Affirmative (${transcript.summary.models.affirmative})`);
+        lines.push('');
+        lines.push(round.affirmativeContent);
+        lines.push('');
+      }
+      
+      if (round.negativeContent) {
+        lines.push(`### Negative (${transcript.summary.models.negative})`);
+        lines.push('');
+        lines.push(round.negativeContent);
+        lines.push('');
+      }
+    }
+    
+    return lines.join('\n');
+  }
+
+  /**
+   * Formats transcript as JSON
+   */
+  private formatAsJSON(transcript: Transcript): string {
+    const serializable = this.serializeTranscript(transcript);
+    return JSON.stringify(serializable, null, 2);
+  }
+
+  /**
+   * Capitalizes and formats round type for display
+   */
+  private capitalizeRoundType(roundType: string): string {
+    return roundType
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  /**
    * Saves a transcript to the file system
    * Preserves formatting and attribution
    * Returns the file path where the transcript was saved

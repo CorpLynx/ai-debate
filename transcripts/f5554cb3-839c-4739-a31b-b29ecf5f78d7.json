@@ -1,0 +1,151 @@
+{
+  "debate": {
+    "id": "f5554cb3-839c-4739-a31b-b29ecf5f78d7",
+    "topic": "Artificial intelligence will benefit humanity",
+    "config": {
+      "timeLimit": 60,
+      "wordLimit": 300,
+      "strictMode": false,
+      "showPreparation": true,
+      "numCrossExamQuestions": 3
+    },
+    "affirmativeModelName": "MockClaude",
+    "negativeModelName": "MockGPT-4",
+    "state": "completed",
+    "rounds": [
+      {
+        "type": "preparation",
+        "affirmativeStatement": {
+          "model": "MockClaude",
+          "position": "affirmative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.229Z"
+        },
+        "negativeStatement": {
+          "model": "MockGPT-4",
+          "position": "negative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.229Z"
+        },
+        "timestamp": "2025-11-27T01:33:35.229Z"
+      },
+      {
+        "type": "opening",
+        "affirmativeStatement": {
+          "model": "MockClaude",
+          "position": "affirmative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "negativeStatement": {
+          "model": "MockGPT-4",
+          "position": "negative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "timestamp": "2025-11-27T01:33:35.230Z"
+      },
+      {
+        "type": "rebuttal",
+        "affirmativeStatement": {
+          "model": "MockClaude",
+          "position": "affirmative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "negativeStatement": {
+          "model": "MockGPT-4",
+          "position": "negative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "timestamp": "2025-11-27T01:33:35.230Z"
+      },
+      {
+        "type": "cross_exam",
+        "affirmativeStatement": {
+          "model": "MockClaude",
+          "position": "affirmative",
+          "content": "Question: I am arguing from the negative position...\n\nResponse to opponent: I am arguing from the negative position...",
+          "wordCount": 18,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "negativeStatement": {
+          "model": "MockGPT-4",
+          "position": "negative",
+          "content": "Response to opponent: I am arguing from the affirmative position...\n\nQuestion: I am arguing from the affirmative position...",
+          "wordCount": 18,
+          "generatedAt": "2025-11-27T01:33:35.230Z"
+        },
+        "timestamp": "2025-11-27T01:33:35.230Z"
+      },
+      {
+        "type": "closing",
+        "affirmativeStatement": {
+          "model": "MockClaude",
+          "position": "affirmative",
+          "content": "I am arguing from the negative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.231Z"
+        },
+        "negativeStatement": {
+          "model": "MockGPT-4",
+          "position": "negative",
+          "content": "I am arguing from the affirmative position...",
+          "wordCount": 7,
+          "generatedAt": "2025-11-27T01:33:35.231Z"
+        },
+        "timestamp": "2025-11-27T01:33:35.231Z"
+      }
+    ],
+    "createdAt": "2025-11-27T01:33:35.229Z",
+    "completedAt": "2025-11-27T01:33:35.231Z"
+  },
+  "formattedRounds": [
+    {
+      "roundType": "preparation",
+      "affirmativeContent": "I am arguing from the negative position...",
+      "negativeContent": "I am arguing from the affirmative position...",
+      "timestamp": "2025-11-27T01:33:35.229Z"
+    },
+    {
+      "roundType": "opening",
+      "affirmativeContent": "I am arguing from the negative position...",
+      "negativeContent": "I am arguing from the affirmative position...",
+      "timestamp": "2025-11-27T01:33:35.230Z"
+    },
+    {
+      "roundType": "rebuttal",
+      "affirmativeContent": "I am arguing from the negative position...",
+      "negativeContent": "I am arguing from the affirmative position...",
+      "timestamp": "2025-11-27T01:33:35.230Z"
+    },
+    {
+      "roundType": "cross_exam",
+      "affirmativeContent": "Question: I am arguing from the negative position...\n\nResponse to opponent: I am arguing from the negative position...",
+      "negativeContent": "Response to opponent: I am arguing from the affirmative position...\n\nQuestion: I am arguing from the affirmative position...",
+      "timestamp": "2025-11-27T01:33:35.230Z"
+    },
+    {
+      "roundType": "closing",
+      "affirmativeContent": "I am arguing from the negative position...",
+      "negativeContent": "I am arguing from the affirmative position...",
+      "timestamp": "2025-11-27T01:33:35.231Z"
+    }
+  ],
+  "summary": {
+    "topic": "Artificial intelligence will benefit humanity",
+    "models": {
+      "affirmative": "MockClaude",
+      "negative": "MockGPT-4"
+    },
+    "totalDuration": 0.002,
+    "roundCount": 5
+  }
+}
