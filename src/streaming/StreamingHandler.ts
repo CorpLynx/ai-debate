@@ -127,6 +127,7 @@ export class StreamingHandler {
     
     if (this.uiConfig.showPreparationProgress) {
       // Update progress based on chunk count (Requirement 11.5)
+      // DO NOT display the chunk - only update progress bar
       const currentCount = this.chunkCounts.get(key) || 0;
       this.chunkCounts.set(key, currentCount + 1);
       
@@ -137,6 +138,7 @@ export class StreamingHandler {
         const estimatedProgress = Math.min(95, Math.log(currentCount + 1) * 20);
         this.progressDisplay.updateProgress(bar, estimatedProgress);
       }
+      // Note: chunk is NOT displayed when progress bars are enabled
     } else {
       // Display chunk with streaming indicator (Requirement 8.2)
       // Add subtle indicator showing which model is currently speaking

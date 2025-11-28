@@ -63,8 +63,15 @@ export class RichTextFormatter {
       this.layout.setColorScheme(colorScheme);
     }
 
+    // Determine effective width for wrapping
+    const effectiveWidth = terminalWidth || this.layout.getTerminalSize().width;
+    const maxContentWidth = Math.min(effectiveWidth - 10, formattingRules.maxLineLength); // Leave margin
+
+    // Preprocess text to add intelligent paragraph breaks
+    const preprocessedText = this.addIntelligentParagraphBreaks(text);
+
     // Split into lines for processing
-    const lines = text.split('\n');
+    const lines = preprocessedText.split('\n');
     const processedLines: string[] = [];
     let inCodeBlock = false;
     let inList = false;
@@ -118,8 +125,8 @@ export class RichTextFormatter {
         formattedLine = this.formatListItem(trimmedLine, indentLevel);
         inList = true;
       } else {
-        // Regular paragraph text
-        formattedLine = this.formatParagraphLine(trimmedLine, indentLevel);
+        // Regular paragraph text - wrap it properly
+        formattedLine = this.formatParagraphLine(trimmedLine, indentLevel, maxContentWidth);
         if (inList) {
           // Add extra spacing after list ends
           if (processedLines.length > 0) {
@@ -132,7 +139,10 @@ export class RichTextFormatter {
       // Apply inline formatting (emphasis, code, etc.)
       formattedLine = this.applyInlineFormatting(formattedLine);
 
-      processedLines.push(formattedLine);
+      // Wrap the formatted line if it's too long
+      const wrappedLines = this.wrapFormattedLine(formattedLine, maxContentWidth, indentLevel);
+      processedLines.push(...wrappedLines);
+      
       previousLineEmpty = false;
     }
 
@@ -230,9 +240,61 @@ export class RichTextFormatter {
   /**
    * Formats a regular paragraph line
    */
-  private formatParagraphLine(line: string, indentLevel: number = 0): string {
+  private formatParagraphLine(line: string, indentLevel: number = 0, maxWidth?: number): string {
     const indent = ' '.repeat(indentLevel * this.formattingRules.baseIndent);
     return `${indent}${line}`;
+  }
+
+  /**
+   * Wraps a formatted line that may contain ANSI codes
+   * Requirement 1.3: Apply appropriate line wrapping to maintain readability
+   */
+  private wrapFormattedLine(line: string, maxWidth: number, indentLevel: number = 0): string[] {
+    // Strip ANSI codes to measure actual text length
+    const strippedLine = line.replace(/\x1b\[[0-9;]*m/g, '');
+    const indent = ' '.repeat(indentLevel * this.formattingRules.baseIndent);
+    const availableWidth = maxWidth - indent.length;
+
+    // If line fits, return as-is
+    if (strippedLine.length <= maxWidth) {
+      return [line];
+    }
+
+    // Need to wrap - this is complex with ANSI codes, so use a simpler approach
+    // Split by words and rebuild lines
+    const words = line.split(' ');
+    const wrappedLines: string[] = [];
+    let currentLine = indent;
+    let currentLength = indent.length;
+
+    for (const word of words) {
+      const wordStripped = word.replace(/\x1b\[[0-9;]*m/g, '');
+      const wordLength = wordStripped.length;
+
+      // Check if adding this word would exceed the width
+      if (currentLength + wordLength + 1 > maxWidth && currentLine.trim().length > 0) {
+        // Start a new line
+        wrappedLines.push(currentLine.trimEnd());
+        currentLine = indent + ' '.repeat(this.formattingRules.wrapIndent);
+        currentLength = indent.length + this.formattingRules.wrapIndent;
+      }
+
+      // Add the word
+      if (currentLine.trim().length === 0 || currentLine.endsWith(indent)) {
+        currentLine += word;
+        currentLength += wordLength;
+      } else {
+        currentLine += ' ' + word;
+        currentLength += wordLength + 1;
+      }
+    }
+
+    // Add the last line
+    if (currentLine.trim().length > 0) {
+      wrappedLines.push(currentLine.trimEnd());
+    }
+
+    return wrappedLines.length > 0 ? wrappedLines : [line];
   }
 
   /**
@@ -376,6 +438,119 @@ export class RichTextFormatter {
    */
   public setFormattingRules(rules: FormattingRules): void {
     this.formattingRules = rules;
+  }
+
+  /**
+   * Intelligently adds paragraph breaks to text that may not have explicit double newlines.
+   * Detects paragraph boundaries based on:
+   * - Sentence endings followed by capital letters
+   * - Topic shifts (detected by transition words)
+   * - List items
+   * - Headers
+   * 
+   * @param text The text to process
+   * @returns Text with intelligent paragraph breaks added
+   */
+  private addIntelligentParagraphBreaks(text: string): string {
+    // If text already has double newlines, preserve them
+    if (text.includes('\n\n')) {
+      return text;
+    }
+
+    const lines = text.split('\n');
+    const processedLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const currentLine = lines[i].trim();
+      const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+
+      processedLines.push(lines[i]);
+
+      // Skip if current line is empty
+      if (!currentLine) {
+        continue;
+      }
+
+      // Add paragraph break after headers
+      if (this.isHeader(currentLine)) {
+        processedLines.push('');
+        continue;
+      }
+
+      // Add paragraph break before headers
+      if (nextLine && this.isHeader(nextLine)) {
+        processedLines.push('');
+        continue;
+      }
+
+      // Add paragraph break after list items if next line is not a list item
+      if (this.isListItem(currentLine) && nextLine && !this.isListItem(nextLine) && !this.isHeader(nextLine)) {
+        processedLines.push('');
+        continue;
+      }
+
+      // Add paragraph break before list items if current line is not a list item
+      if (!this.isListItem(currentLine) && nextLine && this.isListItem(nextLine)) {
+        processedLines.push('');
+        continue;
+      }
+
+      // Detect paragraph breaks based on sentence structure
+      if (nextLine && this.shouldAddParagraphBreak(currentLine, nextLine)) {
+        processedLines.push('');
+      }
+    }
+
+    return processedLines.join('\n');
+  }
+
+  /**
+   * Determines if a paragraph break should be added between two lines
+   * based on content analysis.
+   * 
+   * @param currentLine The current line
+   * @param nextLine The next line
+   * @returns True if a paragraph break should be added
+   */
+  private shouldAddParagraphBreak(currentLine: string, nextLine: string): boolean {
+    // Don't add break if either line is empty
+    if (!currentLine.trim() || !nextLine.trim()) {
+      return false;
+    }
+
+    // Don't add break if current line doesn't end with sentence-ending punctuation
+    if (!/[.!?:]\s*$/.test(currentLine)) {
+      return false;
+    }
+
+    // Add break if next line starts with a transition word/phrase
+    const transitionWords = [
+      'However', 'Moreover', 'Furthermore', 'Additionally', 'Nevertheless',
+      'Therefore', 'Thus', 'Consequently', 'In conclusion', 'In summary',
+      'First', 'Second', 'Third', 'Finally', 'Lastly',
+      'On the other hand', 'In contrast', 'Similarly', 'Likewise',
+      'For example', 'For instance', 'In fact', 'Indeed',
+      'Meanwhile', 'Subsequently', 'Previously', 'Ultimately'
+    ];
+
+    for (const word of transitionWords) {
+      if (nextLine.startsWith(word)) {
+        return true;
+      }
+    }
+
+    // Add break if current line ends with a colon (often introduces a new topic)
+    if (currentLine.trim().endsWith(':')) {
+      return true;
+    }
+
+    // Add break if next line starts with a capital letter and current line is long enough
+    // (suggests a new paragraph rather than a continuation)
+    if (/^[A-Z]/.test(nextLine) && currentLine.length > 60) {
+      return true;
+    }
+
+    return false;
   }
 }
 

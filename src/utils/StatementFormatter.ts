@@ -158,8 +158,14 @@ export function formatStatement(
   const separator = createEnhancedSeparator(scheme);
   
   // Format content with rich text formatting
-  // Requirement 1.5: Apply consistent indentation
-  const formattedContent = formatStatementContent(statement.content, positionColor);
+  // Special handling for cross-examination to group Q&A
+  let formattedContent: string;
+  if (roundType === RoundType.CROSS_EXAM) {
+    formattedContent = formatCrossExaminationContent(statement, positionColor, positionText, scheme);
+  } else {
+    // Requirement 1.5: Apply consistent indentation
+    formattedContent = formatStatementContent(statement.content, positionColor);
+  }
   
   // Requirement 2.3: Create visual separator at the end
   const footerSeparator = createEnhancedSeparator(scheme);
@@ -217,6 +223,56 @@ function formatStatementContent(content: string, positionColor: string): string 
   });
   
   return richFormatted;
+}
+
+/**
+ * Formats cross-examination content with Q&A sections grouped together
+ * Requirement 6.1-6.4: Display questions and answers in a structured format
+ */
+function formatCrossExaminationContent(statement: Statement, positionColor: string, positionText: string, scheme: ColorScheme = DEFAULT_COLOR_SCHEME): string {
+  const labelColor = getColorForElement(ElementType.BOLD, scheme);
+  const mutedColor = getColorForElement(ElementType.MUTED, scheme);
+  const indent = ' '.repeat(DEFAULT_FORMATTING_RULES.baseIndent);
+  
+  // Determine opponent position for clarity
+  const opponentPosition = statement.position === Position.AFFIRMATIVE ? 'Negative' : 'Affirmative';
+  const opponentColor = statement.position === Position.AFFIRMATIVE 
+    ? getPositionColor(Position.NEGATIVE, scheme)
+    : getPositionColor(Position.AFFIRMATIVE, scheme);
+  
+  // Parse the content to extract question and response
+  // Content format: "Question: <question>\n\nResponse to opponent: <response>"
+  const questionMatch = statement.content.match(/Question:\s*([\s\S]*?)(?=\n\nResponse to opponent:|$)/);
+  const responseMatch = statement.content.match(/Response to opponent:\s*([\s\S]*?)$/);
+  
+  const parts: string[] = [];
+  
+  if (questionMatch && questionMatch[1].trim()) {
+    // Format the question section with speaker indicator
+    parts.push(`${indent}${labelColor}Question ${mutedColor}(asked by ${positionColor}${positionText}${ANSI_RESET}${mutedColor} to ${opponentColor}${opponentPosition}${ANSI_RESET}${mutedColor}):${ANSI_RESET}`);
+    parts.push('');
+    const questionFormatted = richTextFormatter.formatRichText(questionMatch[1].trim(), {
+      indentLevel: 2,
+      colorScheme: DEFAULT_COLOR_SCHEME,
+      formattingRules: DEFAULT_FORMATTING_RULES
+    });
+    parts.push(questionFormatted);
+    parts.push('');
+  }
+  
+  if (responseMatch && responseMatch[1].trim()) {
+    // Format the response section with speaker indicator
+    parts.push(`${indent}${labelColor}Response ${mutedColor}(by ${positionColor}${positionText}${ANSI_RESET}${mutedColor} to ${opponentColor}${opponentPosition}${ANSI_RESET}${mutedColor}'s question):${ANSI_RESET}`);
+    parts.push('');
+    const responseFormatted = richTextFormatter.formatRichText(responseMatch[1].trim(), {
+      indentLevel: 2,
+      colorScheme: DEFAULT_COLOR_SCHEME,
+      formattingRules: DEFAULT_FORMATTING_RULES
+    });
+    parts.push(responseFormatted);
+  }
+  
+  return parts.join('\n');
 }
 
 /**

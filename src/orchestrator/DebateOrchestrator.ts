@@ -17,6 +17,103 @@ import { CitationExtractor } from '../utils/CitationExtractor';
 import { CitationTracker } from '../utils/CitationTracker';
 import { BibliographyGenerator } from '../utils/BibliographyGenerator';
 
+/**
+ * Helper class to wrap streaming text output to fit within terminal width
+ */
+class StreamingLineWrapper {
+  private buffer: string = '';
+  private currentLine: string = '';
+  private maxWidth: number;
+  private indent: string = '  '; // 2 spaces indent
+
+  constructor(maxWidth: number = 80) {
+    this.maxWidth = maxWidth - 4; // Leave margin
+  }
+
+  /**
+   * Process a chunk of streaming text and return wrapped output
+   */
+  processChunk(chunk: string): string {
+    this.buffer += chunk;
+    let output = '';
+
+    // Process complete words (split by spaces)
+    const parts = this.buffer.split(' ');
+    
+    // Keep the last part in buffer (might be incomplete word)
+    if (parts.length > 1) {
+      this.buffer = parts[parts.length - 1];
+      
+      // Process complete words
+      for (let i = 0; i < parts.length - 1; i++) {
+        const word = parts[i];
+        
+        // Check for newlines in the word
+        if (word.includes('\n')) {
+          const lines = word.split('\n');
+          for (let j = 0; j < lines.length; j++) {
+            if (j > 0) {
+              // Newline found - flush current line
+              output += this.currentLine + '\n';
+              this.currentLine = this.indent;
+            }
+            if (lines[j]) {
+              output += this.addWord(lines[j] + (j < lines.length - 1 ? '' : ' '));
+            }
+          }
+        } else {
+          output += this.addWord(word + ' ');
+        }
+      }
+    }
+
+    return output;
+  }
+
+  /**
+   * Add a word to the current line, wrapping if necessary
+   */
+  private addWord(word: string): string {
+    const wordLength = word.length;
+    const currentLength = this.currentLine.length;
+
+    // If adding this word would exceed width, wrap to new line
+    if (currentLength + wordLength > this.maxWidth && this.currentLine.trim().length > 0) {
+      const output = this.currentLine.trimEnd() + '\n';
+      this.currentLine = this.indent + word;
+      return output;
+    }
+
+    // Add word to current line
+    if (this.currentLine.trim().length === 0) {
+      this.currentLine = this.indent + word;
+    } else {
+      this.currentLine += word;
+    }
+
+    return '';
+  }
+
+  /**
+   * Flush any remaining content
+   */
+  flush(): string {
+    let output = '';
+    
+    // Process any remaining buffer
+    if (this.buffer.trim()) {
+      output += this.addWord(this.buffer);
+    }
+    
+    // Output current line
+    if (this.currentLine.trim()) {
+      output += this.currentLine;
+    }
+
+    return output;
+  }
+}
+
 export interface DebateOrchestrator {
   initializeDebate(topic: string, config: DebateConfig, affirmativeModel: AIModelProvider, negativeModel: AIModelProvider): Debate;
   executePreparation(debate: Debate): Promise<Debate>;
@@ -326,8 +423,10 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
             // Fall back to non-streaming (Requirement 6.5) with existing retry logic
             try {
               result = await this.generateWithTimeout(debate, debate.affirmativeModel, affirmativePrompt, affirmativeContext);
-              // Display the complete result
-              console.log(result);
+              // Only display the complete result if NOT showing progress bars
+              if (!uiConfig?.showPreparationProgress) {
+                console.log(result);
+              }
             } catch (error) {
               if (!timedOut) {
                 clearTimeout(timeoutId);
@@ -410,8 +509,10 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
             // Fall back to non-streaming (Requirement 6.5) with existing retry logic
             try {
               result = await this.generateWithTimeout(debate, debate.negativeModel, negativePrompt, negativeContext);
-              // Display the complete result
-              console.log(result);
+              // Only display the complete result if NOT showing progress bars
+              if (!uiConfig?.showPreparationProgress) {
+                console.log(result);
+              }
             } catch (error) {
               if (!timedOut) {
                 clearTimeout(timeoutId);
@@ -487,7 +588,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.affirmativeModel,
         affirmativePrompt,
         affirmativeContext,
-        RoundType.OPENING
+        RoundType.OPENING,
+        Position.AFFIRMATIVE
       );
       
       // Extract citations from affirmative opening (Requirement 12.2)
@@ -513,7 +615,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
-        RoundType.OPENING
+        RoundType.OPENING,
+        Position.NEGATIVE
       );
       
       // Extract citations from negative opening (Requirement 12.2)
@@ -596,7 +699,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.affirmativeModel,
         affirmativePrompt,
         affirmativeContext,
-        RoundType.REBUTTAL
+        RoundType.REBUTTAL,
+        Position.AFFIRMATIVE
       );
       
       // Extract citations from affirmative rebuttal (Requirement 12.2)
@@ -622,7 +726,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
-        RoundType.REBUTTAL
+        RoundType.REBUTTAL,
+        Position.NEGATIVE
       );
       
       // Extract citations from negative rebuttal (Requirement 12.2)
@@ -689,6 +794,9 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     const affirmativeStatements = PromptTemplates.formatPreviousStatements(negativeContext);
     
     try {
+      // Cross-examination uses non-streaming to allow proper Q&A grouping
+      // We'll display formatted output after all exchanges complete
+      
       // Requirement 6.1: Affirmative asks question
       const affirmativeQuestionPrompt = PromptTemplates.getCrossExaminationQuestionPrompt(
         debate.topic,
@@ -702,6 +810,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         affirmativeQuestionPrompt,
         affirmativeContext,
         RoundType.CROSS_EXAM
+        // No position = no streaming, allows proper grouping
       );
       
       // Requirement 6.2: Negative responds to affirmative's question
@@ -717,6 +826,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         negativeResponsePrompt,
         negativeContext,
         RoundType.CROSS_EXAM
+        // No position = no streaming
       );
       
       // Requirement 6.3: Negative asks question
@@ -732,6 +842,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         negativeQuestionPrompt,
         negativeContext,
         RoundType.CROSS_EXAM
+        // No position = no streaming
       );
       
       // Requirement 6.4: Affirmative responds to negative's question
@@ -747,6 +858,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         affirmativeResponsePrompt,
         affirmativeContext,
         RoundType.CROSS_EXAM
+        // No position = no streaming
       );
       
       // Store the cross-examination as a combined statement for each position
@@ -850,7 +962,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.affirmativeModel,
         affirmativePrompt,
         affirmativeContext,
-        RoundType.CLOSING
+        RoundType.CLOSING,
+        Position.AFFIRMATIVE
       );
       
       // Extract citations from affirmative closing (Requirement 12.2)
@@ -876,7 +989,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         debate.negativeModel,
         negativePrompt,
         negativeContext,
-        RoundType.CLOSING
+        RoundType.CLOSING,
+        Position.NEGATIVE
       );
       
       // Extract citations from negative closing (Requirement 12.2)
@@ -1071,12 +1185,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
   /**
    * Wraps model generation with error handling, timeout, and retry logic
    * Logs errors with context and notifies user
+   * Supports streaming if the model supports it
    * 
    * @param debate - Current debate state
    * @param model - The AI model provider
    * @param prompt - The prompt to send to the model
    * @param context - The debate context
    * @param round - The current round type
+   * @param position - The debate position (for streaming display)
    * @returns The generated response (with word limit enforced if configured)
    * @throws Error if generation fails after retry
    */
@@ -1085,10 +1201,50 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     model: AIModelProvider,
     prompt: string,
     context: DebateContext,
-    round: RoundType
+    round: RoundType,
+    position?: Position
   ): Promise<string> {
     try {
-      const response = await this.generateWithTimeout(debate, model, prompt, context);
+      let response: string;
+      
+      // Use streaming if model supports it and position is provided
+      if (position && model.supportsStreaming()) {
+        const streamingHandler = new StreamingHandler(debate.config.ui);
+        
+        // Display round header
+        console.log(''); // Spacing
+        streamingHandler.displayStreamLabel(model.getModelName(), position);
+        
+        // Create a line wrapper for streaming output
+        const wrapper = new StreamingLineWrapper(80); // Max 80 chars per line
+        
+        let accumulatedContent = '';
+        response = await model.generateResponseStream(
+          prompt,
+          context,
+          (chunk: string) => {
+            accumulatedContent += chunk;
+            // Wrap and display chunk in real-time
+            const wrappedChunk = wrapper.processChunk(chunk);
+            if (wrappedChunk) {
+              process.stdout.write(wrappedChunk);
+            }
+          }
+        );
+        
+        // Flush any remaining content
+        const finalChunk = wrapper.flush();
+        if (finalChunk) {
+          process.stdout.write(finalChunk);
+        }
+        
+        // Display completion
+        console.log(''); // Newline after content
+        streamingHandler.displayStreamEnd(model.getModelName(), position);
+      } else {
+        // Fall back to non-streaming
+        response = await this.generateWithTimeout(debate, model, prompt, context);
+      }
       
       // Enforce word limit if configured (Requirement 10.2)
       return this.enforceWordLimitOnResponse(response, debate.config);

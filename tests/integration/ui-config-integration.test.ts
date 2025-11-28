@@ -16,6 +16,15 @@ describe('UI Configuration Integration', () => {
     configManager = new ConfigurationManager();
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'debate-test-'));
     tempConfigPath = path.join(tempDir, '.debaterc');
+    
+    // Clear UI environment variables to prevent test pollution
+    delete process.env.DEBATE_UI_ENABLE_RICH_FORMATTING;
+    delete process.env.DEBATE_UI_ENABLE_COLORS;
+    delete process.env.DEBATE_UI_ENABLE_ANIMATIONS;
+    delete process.env.DEBATE_UI_COLOR_SCHEME;
+    delete process.env.DEBATE_UI_TERMINAL_WIDTH;
+    delete process.env.DEBATE_UI_SHOW_PREPARATION_PROGRESS;
+    delete process.env.DEBATE_UI_ENABLE_HYPERLINKS;
   });
 
   afterEach(() => {
@@ -26,6 +35,15 @@ describe('UI Configuration Integration', () => {
     if (fs.existsSync(tempDir)) {
       fs.rmdirSync(tempDir);
     }
+    
+    // Clean up environment variables
+    delete process.env.DEBATE_UI_ENABLE_RICH_FORMATTING;
+    delete process.env.DEBATE_UI_ENABLE_COLORS;
+    delete process.env.DEBATE_UI_ENABLE_ANIMATIONS;
+    delete process.env.DEBATE_UI_COLOR_SCHEME;
+    delete process.env.DEBATE_UI_TERMINAL_WIDTH;
+    delete process.env.DEBATE_UI_SHOW_PREPARATION_PROGRESS;
+    delete process.env.DEBATE_UI_ENABLE_HYPERLINKS;
   });
 
   describe('Configuration Loading', () => {
@@ -257,11 +275,15 @@ describe('UI Configuration Integration', () => {
       fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
       const result = configManager.loadAndMerge({}, tempConfigPath);
       
+      // Verify the explicitly set flags
       expect(result.config.ui?.enableRichFormatting).toBe(false);
       expect(result.config.ui?.enableAnimations).toBe(false);
       expect(result.config.ui?.enableColors).toBe(false);
       expect(result.config.ui?.showPreparationProgress).toBe(false);
       expect(result.config.ui?.enableHyperlinks).toBe(false);
+      
+      // Verify other properties have defaults
+      expect(result.config.ui?.colorScheme).toBeDefined();
     });
   });
 
@@ -288,7 +310,7 @@ describe('UI Configuration Integration', () => {
 
       const config = {
         ui: {
-          colorScheme: 'custom',
+          colorScheme: 'custom' as const,
           customColorScheme: customScheme
         }
       };
@@ -296,8 +318,10 @@ describe('UI Configuration Integration', () => {
       fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
       const result = configManager.loadAndMerge({}, tempConfigPath);
       
+      // Custom color scheme should be set
       expect(result.config.ui?.colorScheme).toBe('custom');
       expect(result.config.ui?.customColorScheme).toBeDefined();
+      expect(result.config.ui?.customColorScheme?.affirmative).toBe('\x1b[32m');
     });
   });
 
@@ -312,7 +336,10 @@ describe('UI Configuration Integration', () => {
       fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
       const result = configManager.loadAndMerge({}, tempConfigPath);
       
+      // Terminal width should be set
       expect(result.config.ui?.terminalWidth).toBe(120);
+      // Other properties should have defaults
+      expect(result.config.ui?.enableColors).toBeDefined();
     });
 
     it('should reject invalid terminal width', () => {
