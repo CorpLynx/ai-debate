@@ -1,6 +1,23 @@
 # AI Debate System
 
-A system for orchestrating formal debates between AI models.
+A system for orchestrating formal debates between AI models with dynamic personality profiles and diverse argumentation styles.
+
+## Features
+
+- **Dynamic Personality System**: Debaters exhibit unique behavioral characteristics across four dimensions (civility, manner, research depth, rhetoric usage)
+- **Debate Tactics**: Support for various argumentation strategies including Gish Gallop, Strawman, Appeal to Emotion, and more
+- **Multiple AI Providers**: Support for OpenAI, Anthropic, and local models
+- **Rich Formatting**: Enhanced terminal output with colors, animations, and rich text
+- **Flexible Configuration**: Extensive customization through configuration files and environment variables
+- **Property-Based Testing**: Comprehensive test coverage ensuring correctness
+
+## Documentation
+
+- **[Personality System Guide](docs/personality-system.md)** - Complete guide to personality dimensions, traits, and how they affect debates
+- **[Debate Tactics Reference](docs/debate-tactics-reference.md)** - Detailed reference for all debate tactics with examples and usage guidelines
+- **[Personality Examples](docs/personality-examples.md)** - Ready-to-use personality configurations and complete debate scenarios
+- **[Error Handling](docs/error-handling-implementation.md)** - Error handling patterns and best practices
+- **[Configuration Guide](docs/configuration-error-handling.md)** - Configuration management and troubleshooting
 
 ## Installation
 
@@ -13,6 +30,73 @@ npm install
 ```bash
 npm run build
 ```
+
+## Quick Start
+
+### Basic Debate
+
+```typescript
+import { DebateOrchestrator } from './orchestrator/DebateOrchestrator';
+import { PersonalityGenerator } from './utils/PersonalityGenerator';
+
+const orchestrator = new DebateOrchestrator();
+const generator = new PersonalityGenerator();
+
+// Create a debate with random personalities
+const debate = await orchestrator.initializeDebate({
+  topic: "Should artificial intelligence be regulated?",
+  affirmativePersonality: generator.generateRandom(),
+  negativePersonality: generator.generateRandom()
+});
+
+await orchestrator.runDebate(debate);
+```
+
+### Using Preset Personalities
+
+```typescript
+import { DebateTactic } from './models/DebateTactic';
+
+// Academic debate
+const academicDebate = await orchestrator.initializeDebate({
+  topic: "Should governments invest in nuclear energy?",
+  affirmativePersonality: {
+    civility: 9,
+    manner: 8,
+    researchDepth: 9,
+    rhetoricUsage: 2,
+    tactics: [DebateTactic.APPEAL_TO_AUTHORITY]
+  },
+  negativePersonality: {
+    civility: 9,
+    manner: 8,
+    researchDepth: 9,
+    rhetoricUsage: 2,
+    tactics: [DebateTactic.NONE]
+  }
+});
+
+// Activist debate
+const activistDebate = await orchestrator.initializeDebate({
+  topic: "Should billionaires be taxed at 90%?",
+  affirmativePersonality: {
+    civility: 4,
+    manner: 3,
+    researchDepth: 5,
+    rhetoricUsage: 9,
+    tactics: [DebateTactic.APPEAL_TO_EMOTION, DebateTactic.FALSE_DILEMMA]
+  },
+  negativePersonality: {
+    civility: 3,
+    manner: 2,
+    researchDepth: 4,
+    rhetoricUsage: 8,
+    tactics: [DebateTactic.SLIPPERY_SLOPE]
+  }
+});
+```
+
+See [Personality Examples](docs/personality-examples.md) for more ready-to-use configurations.
 
 ## Testing
 

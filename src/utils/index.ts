@@ -12,3 +12,4 @@ export * from './CitationExtractor';
 export * from './CitationTracker';
 export * from './BibliographyGenerator';
 export * from './ColorSchemeValidator';
+export * from './PersonalityGenerator';

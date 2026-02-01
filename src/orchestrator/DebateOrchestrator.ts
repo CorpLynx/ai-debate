@@ -16,6 +16,10 @@ import * as PromptTemplates from '../prompts/PromptTemplates';
 import { CitationExtractor } from '../utils/CitationExtractor';
 import { CitationTracker } from '../utils/CitationTracker';
 import { BibliographyGenerator } from '../utils/BibliographyGenerator';
+import { PersonalityGenerator } from '../utils/PersonalityGenerator';
+import { PromptBuilder } from '../prompts/PromptBuilder';
+import { PersonalityProfile } from '../models/PersonalityProfile';
+import { PersonalityError } from '../models/PersonalityError';
 
 /**
  * Helper class to wrap streaming text output to fit within terminal width
@@ -143,6 +147,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
   private citationExtractor: CitationExtractor;
   private citationTracker: CitationTracker;
   private bibliographyGenerator: BibliographyGenerator;
+  private personalityGenerator: PersonalityGenerator;
+  private promptBuilder: PromptBuilder;
 
   constructor(transcriptsDir?: string) {
     this.validator = new DebateValidator();
@@ -151,11 +157,14 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     this.citationExtractor = new CitationExtractor();
     this.citationTracker = new CitationTracker();
     this.bibliographyGenerator = new BibliographyGenerator();
+    this.personalityGenerator = new PersonalityGenerator();
+    this.promptBuilder = new PromptBuilder();
   }
   
   /**
    * Initializes a new debate with the given topic and configuration.
    * Validates the topic and stores it in the debate session.
+   * Automatically generates random personalities for each debate if not specified.
    * 
    * @param topic - The debate topic (must be non-empty with at least one non-whitespace character)
    * @param config - The debate configuration
@@ -163,6 +172,13 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
    * @param negativeModel - The AI model taking the negative position
    * @returns A new Debate object in INITIALIZED state
    * @throws Error if the topic is invalid
+   * @throws PersonalityError if personality profiles are invalid
+   * 
+   * Requirements:
+   * - 3.1: Automatically generate random personality profiles for both debaters
+   * - 3.2: Include behavioral trait instructions in each debater's system prompt
+   * - 3.3: Apply default personality when none specified
+   * - 3.4: Handle invalid personality profiles gracefully with clear error messages
    */
   initializeDebate(
     topic: string, 
@@ -179,6 +195,36 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     // Reset citation tracking for new debate
     this.resetCitationTracking();
 
+    // Determine personality profiles based on configuration (Requirements 3.1, 3.3, 3.4)
+    let affirmativePersonality: PersonalityProfile;
+    let negativePersonality: PersonalityProfile;
+    
+    try {
+      affirmativePersonality = this.resolvePersonalityProfile(config.affirmativePersonality);
+    } catch (error) {
+      if (error instanceof PersonalityError) {
+        throw new PersonalityError(
+          `Invalid affirmative personality profile: ${error.message}`,
+          error.invalidParams,
+          error.validationErrors
+        );
+      }
+      throw error;
+    }
+    
+    try {
+      negativePersonality = this.resolvePersonalityProfile(config.negativePersonality);
+    } catch (error) {
+      if (error instanceof PersonalityError) {
+        throw new PersonalityError(
+          `Invalid negative personality profile: ${error.message}`,
+          error.invalidParams,
+          error.validationErrors
+        );
+      }
+      throw error;
+    }
+
     // Store topic in debate session (Requirement 1.2)
     const debate: Debate = {
       id: randomUUID(),
@@ -186,6 +232,8 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       config,
       affirmativeModel,
       negativeModel,
+      affirmativePersonality,
+      negativePersonality,
       state: DebateState.INITIALIZED,
       rounds: [],
       createdAt: new Date()
@@ -193,6 +241,85 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
 
     // Note: Display confirmation (Requirement 1.3) will be handled by CLI layer
     return debate;
+  }
+
+  /**
+   * Resolves a personality profile from the configuration.
+   * Handles 'random', 'default', or explicit PersonalityProfile values.
+   * Validates explicit profiles and provides clear error messages.
+   * 
+   * @param personalityConfig - The personality configuration from DebateConfig
+   * @returns A resolved PersonalityProfile
+   * @throws PersonalityError if an explicit profile is invalid
+   * 
+   * Requirements:
+   * - 3.4: Handle invalid personality profiles gracefully with clear error messages
+   */
+  private resolvePersonalityProfile(
+    personalityConfig?: PersonalityProfile | 'random' | 'default'
+  ): PersonalityProfile {
+    try {
+      if (!personalityConfig || personalityConfig === 'default') {
+        // Requirement 3.3: Apply default personality when none specified
+        return this.personalityGenerator.getDefaultProfile();
+      } else if (personalityConfig === 'random') {
+        // Requirement 3.1: Automatically generate random personality profiles
+        return this.personalityGenerator.generateRandom();
+      } else {
+        // Explicit personality profile provided - validate it
+        // Requirement 3.4: Validate and provide clear error messages
+        this.personalityGenerator.validateProfileOrThrow(personalityConfig);
+        return personalityConfig;
+      }
+    } catch (error) {
+      if (error instanceof PersonalityError) {
+        // Re-throw PersonalityError with context
+        throw new PersonalityError(
+          `Failed to resolve personality profile: ${error.message}`,
+          error.invalidParams,
+          error.validationErrors
+        );
+      }
+      // Wrap unexpected errors
+      throw new PersonalityError(
+        `Unexpected error resolving personality profile: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * Builds a prompt with personality traits applied.
+   * Combines the base prompt template with personality instructions.
+   * 
+   * @param basePrompt - The base prompt from PromptTemplates
+   * @param debate - The current debate state
+   * @param position - The debater's position
+   * @returns The complete prompt with personality instructions
+   * 
+   * Requirements:
+   * - 3.2: Apply personalities when building debater prompts
+   */
+  private buildPromptWithPersonality(
+    basePrompt: string,
+    debate: Debate,
+    position: Position
+  ): string {
+    // Get the personality profile for this position
+    const personality = position === Position.AFFIRMATIVE 
+      ? debate.affirmativePersonality 
+      : debate.negativePersonality;
+
+    // Build the complete prompt with personality traits
+    const promptWithPersonality = this.promptBuilder.buildDebaterPrompt(
+      position,
+      personality,
+      personality.tactics
+    );
+
+    // Combine with the base prompt (which contains round-specific instructions)
+    // The personality prompt provides the system-level instructions,
+    // and the base prompt provides the round-specific task
+    return `${promptWithPersonality}\n\n${basePrompt}`;
   }
 
   /**
@@ -224,8 +351,12 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     };
     
     // Generate prompts using centralized templates (Requirements 4.1, 4.2)
-    const affirmativePrompt = PromptTemplates.getPreparationPrompt(debate.topic, Position.AFFIRMATIVE);
-    const negativePrompt = PromptTemplates.getPreparationPrompt(debate.topic, Position.NEGATIVE);
+    const baseAffirmativePrompt = PromptTemplates.getPreparationPrompt(debate.topic, Position.AFFIRMATIVE);
+    const baseNegativePrompt = PromptTemplates.getPreparationPrompt(debate.topic, Position.NEGATIVE);
+    
+    // Apply personality traits to prompts (Requirement 3.2)
+    const affirmativePrompt = this.buildPromptWithPersonality(baseAffirmativePrompt, debate, Position.AFFIRMATIVE);
+    const negativePrompt = this.buildPromptWithPersonality(baseNegativePrompt, debate, Position.NEGATIVE);
     
     try {
       // Get preparation time limit (Requirements 5.5, 6.6)
@@ -233,7 +364,7 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       
       // Generate preparation materials from both models concurrently with timeout
       // Use streaming if available (Requirements 6.1, 6.2, 6.4, 6.5)
-      const [affirmativePreparation, negativePreparation] = await this.executePreparationWithTimeout(
+      let [affirmativePreparation, negativePreparation] = await this.executePreparationWithTimeout(
         debate,
         affirmativePrompt,
         negativePrompt,
@@ -255,6 +386,10 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
         Position.NEGATIVE,
         RoundType.PREPARATION
       );
+
+      // Enforce word limit on preparation materials (Requirement 10.2)
+      affirmativePreparation = this.enforceWordLimitOnResponse(affirmativePreparation, debate.config);
+      negativePreparation = this.enforceWordLimitOnResponse(negativePreparation, debate.config);
 
       // Store preparation materials (Requirement 4.3)
       const preparationRound = {
@@ -578,8 +713,12 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     const negativeContext = this.buildContext(debate, Position.NEGATIVE, RoundType.OPENING);
     
     // Generate prompts using centralized templates
-    const affirmativePrompt = PromptTemplates.getOpeningStatementPrompt(debate.topic, Position.AFFIRMATIVE);
-    const negativePrompt = PromptTemplates.getOpeningStatementPrompt(debate.topic, Position.NEGATIVE);
+    const baseAffirmativePrompt = PromptTemplates.getOpeningStatementPrompt(debate.topic, Position.AFFIRMATIVE);
+    const baseNegativePrompt = PromptTemplates.getOpeningStatementPrompt(debate.topic, Position.NEGATIVE);
+    
+    // Apply personality traits to prompts (Requirement 3.2)
+    const affirmativePrompt = this.buildPromptWithPersonality(baseAffirmativePrompt, debate, Position.AFFIRMATIVE);
+    const negativePrompt = this.buildPromptWithPersonality(baseNegativePrompt, debate, Position.NEGATIVE);
     
     try {
       // Requirement 3.3: Prompt affirmative model first
@@ -681,16 +820,20 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     const affirmativeOpening = openingRound?.affirmativeStatement?.content || '';
     
     // Generate prompts using centralized templates
-    const affirmativePrompt = PromptTemplates.getRebuttalPrompt(
+    const baseAffirmativePrompt = PromptTemplates.getRebuttalPrompt(
       debate.topic,
       Position.AFFIRMATIVE,
       negativeOpening
     );
-    const negativePrompt = PromptTemplates.getRebuttalPrompt(
+    const baseNegativePrompt = PromptTemplates.getRebuttalPrompt(
       debate.topic,
       Position.NEGATIVE,
       affirmativeOpening
     );
+    
+    // Apply personality traits to prompts (Requirement 3.2)
+    const affirmativePrompt = this.buildPromptWithPersonality(baseAffirmativePrompt, debate, Position.AFFIRMATIVE);
+    const negativePrompt = this.buildPromptWithPersonality(baseNegativePrompt, debate, Position.NEGATIVE);
     
     try {
       // Generate rebuttals for both models
@@ -798,10 +941,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       // We'll display formatted output after all exchanges complete
       
       // Requirement 6.1: Affirmative asks question
-      const affirmativeQuestionPrompt = PromptTemplates.getCrossExaminationQuestionPrompt(
+      const baseAffirmativeQuestionPrompt = PromptTemplates.getCrossExaminationQuestionPrompt(
         debate.topic,
         Position.AFFIRMATIVE,
         negativeStatements
+      );
+      const affirmativeQuestionPrompt = this.buildPromptWithPersonality(
+        baseAffirmativeQuestionPrompt,
+        debate,
+        Position.AFFIRMATIVE
       );
       
       const affirmativeQuestion = await this.generateWithErrorHandling(
@@ -814,10 +962,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       );
       
       // Requirement 6.2: Negative responds to affirmative's question
-      const negativeResponsePrompt = PromptTemplates.getCrossExaminationAnswerPrompt(
+      const baseNegativeResponsePrompt = PromptTemplates.getCrossExaminationAnswerPrompt(
         debate.topic,
         Position.NEGATIVE,
         affirmativeQuestion
+      );
+      const negativeResponsePrompt = this.buildPromptWithPersonality(
+        baseNegativeResponsePrompt,
+        debate,
+        Position.NEGATIVE
       );
       
       const negativeResponse = await this.generateWithErrorHandling(
@@ -830,10 +983,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       );
       
       // Requirement 6.3: Negative asks question
-      const negativeQuestionPrompt = PromptTemplates.getCrossExaminationQuestionPrompt(
+      const baseNegativeQuestionPrompt = PromptTemplates.getCrossExaminationQuestionPrompt(
         debate.topic,
         Position.NEGATIVE,
         affirmativeStatements
+      );
+      const negativeQuestionPrompt = this.buildPromptWithPersonality(
+        baseNegativeQuestionPrompt,
+        debate,
+        Position.NEGATIVE
       );
       
       const negativeQuestion = await this.generateWithErrorHandling(
@@ -846,10 +1004,15 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
       );
       
       // Requirement 6.4: Affirmative responds to negative's question
-      const affirmativeResponsePrompt = PromptTemplates.getCrossExaminationAnswerPrompt(
+      const baseAffirmativeResponsePrompt = PromptTemplates.getCrossExaminationAnswerPrompt(
         debate.topic,
         Position.AFFIRMATIVE,
         negativeQuestion
+      );
+      const affirmativeResponsePrompt = this.buildPromptWithPersonality(
+        baseAffirmativeResponsePrompt,
+        debate,
+        Position.AFFIRMATIVE
       );
       
       const affirmativeResponse = await this.generateWithErrorHandling(
@@ -944,16 +1107,20 @@ export class DebateOrchestratorImpl implements DebateOrchestrator {
     const debateSummary = PromptTemplates.formatPreviousStatements(affirmativeContext);
     
     // Generate prompts using centralized templates
-    const affirmativePrompt = PromptTemplates.getClosingStatementPrompt(
+    const baseAffirmativePrompt = PromptTemplates.getClosingStatementPrompt(
       debate.topic,
       Position.AFFIRMATIVE,
       debateSummary
     );
-    const negativePrompt = PromptTemplates.getClosingStatementPrompt(
+    const baseNegativePrompt = PromptTemplates.getClosingStatementPrompt(
       debate.topic,
       Position.NEGATIVE,
       debateSummary
     );
+    
+    // Apply personality traits to prompts (Requirement 3.2)
+    const affirmativePrompt = this.buildPromptWithPersonality(baseAffirmativePrompt, debate, Position.AFFIRMATIVE);
+    const negativePrompt = this.buildPromptWithPersonality(baseNegativePrompt, debate, Position.NEGATIVE);
     
     try {
       // Generate closing statements for both models

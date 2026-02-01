@@ -9,8 +9,24 @@ export * from './Debate';
 export * from './Transcript';
 export * from './ValidationResult';
 export * from './DebateError';
+export * from './PersonalityError';
 export * from './ColorScheme';
 export * from './FormattingRules';
 export * from './UIConfig';
 export * from './ProgressBar';
 export * from './Citation';
+
+// Advanced features models
+export * from './DebateTactic';
+export * from './PersonalityProfile';
+export * from './ModeratorStrictness';
+export * from './DebateRules';
+export * from './RuleViolation';
+export * from './ModeratorIntervention';
+export * from './TacticIdentification';
+export * from './FallacyDetection';
+export * from './ModeratorReview';
+export * from './ModeratorContext';
+export * from './ModeratorCommentary';
+export * from './ProfileSummary';
+export * from './EnhancedDebate';

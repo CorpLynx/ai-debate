@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification extends the base AI Debate System with advanced features including a moderator AI model, customizable debater personalities, and dynamic behavioral traits. The moderator manages debate flow, enforces rules, and provides commentary, while personality generation allows debaters to exhibit diverse argumentation styles ranging from civil and thoughtful to hostile and rhetorical.
+This specification extends the base AI Debate System with advanced features including a moderator AI model and randomly-generated debater personalities. The moderator manages debate flow, enforces rules, and provides commentary, while automatic personality generation ensures debaters exhibit diverse and unpredictable argumentation styles ranging from civil and thoughtful to hostile and rhetorical. Personality traits are always randomly assigned and hidden from users to maintain debate authenticity.
 
 ## Glossary
 
@@ -44,29 +44,19 @@ This specification extends the base AI Debate System with advanced features incl
 
 ### Requirement 3
 
-**User Story:** As a user, I want to configure custom personality profiles for debaters, so that I can create debates with specific argumentation styles.
+**User Story:** As a user, I want debaters to have diverse personalities, so that each debate exhibits unique and unpredictable argumentation styles.
 
 #### Acceptance Criteria
 
-1. WHEN a user specifies a personality profile for a debater THEN the Debate System SHALL apply the profile to that debater's system prompt
-2. WHEN a personality profile is applied THEN the Debate System SHALL include behavioral trait instructions in the debater's context
-3. WHEN no personality profile is specified THEN the Debate System SHALL use a neutral default personality
-4. WHEN a personality profile contains invalid values THEN the Debate System SHALL reject the profile and notify the user
+1. WHEN a debate is initialized THEN the Debate System SHALL automatically generate random personality profiles for both debaters
+2. WHEN personality profiles are generated THEN the Debate System SHALL include behavioral trait instructions in each debater's system prompt
+3. WHEN personality profiles are generated THEN the Debate System SHALL select values across all personality dimensions
+4. WHEN personality profiles are generated THEN the Debate System SHALL ensure trait combinations are coherent and realistic
+5. WHEN personality profiles are generated THEN the Debate System SHALL NOT display the trait values to the user
 
 ### Requirement 4
 
-**User Story:** As a user, I want to generate random personality profiles, so that I can create diverse and unpredictable debates.
-
-#### Acceptance Criteria
-
-1. WHEN a user requests random personality generation THEN the Debate System SHALL generate a valid personality profile with random trait values
-2. WHEN generating random personalities THEN the Debate System SHALL select values across all personality dimensions
-3. WHEN random personalities are generated THEN the Debate System SHALL display the generated profiles to the user before the debate begins
-4. WHEN generating personalities THEN the Debate System SHALL ensure trait combinations are coherent and realistic
-
-### Requirement 5
-
-**User Story:** As a user, I want debaters to exhibit civility traits, so that I can control the tone of the debate from respectful to hostile.
+**User Story:** As a user, I want debaters to exhibit varying civility levels, so that debates can range from respectful to hostile in tone.
 
 #### Acceptance Criteria
 
@@ -75,9 +65,9 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHERE a debater has moderate civility THEN the Debate System SHALL instruct the debater to balance respect with assertiveness
 4. WHEN civility traits are applied THEN the Debate System SHALL include specific language guidelines in the system prompt
 
-### Requirement 6
+### Requirement 5
 
-**User Story:** As a user, I want debaters to exhibit manner traits, so that I can control how polite or abrasive the argumentation becomes.
+**User Story:** As a user, I want debaters to exhibit varying manner traits, so that debates can range from polite to abrasive in style.
 
 #### Acceptance Criteria
 
@@ -86,9 +76,9 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHERE a debater has moderate manner traits THEN the Debate System SHALL instruct the debater to use conversational but firm language
 4. WHEN manner traits conflict with civility traits THEN the Debate System SHALL blend both traits in the system prompt
 
-### Requirement 7
+### Requirement 6
 
-**User Story:** As a user, I want debaters to exhibit research depth traits, so that arguments can range from well-researched to superficial.
+**User Story:** As a user, I want debaters to exhibit varying research depth, so that arguments can range from well-researched to superficial.
 
 #### Acceptance Criteria
 
@@ -97,9 +87,9 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHERE a debater has moderate research depth THEN the Debate System SHALL instruct the debater to balance evidence with broader arguments
 4. WHEN research depth is high THEN the Debate System SHALL allocate additional preparation time for the debater
 
-### Requirement 8
+### Requirement 7
 
-**User Story:** As a user, I want debaters to exhibit rhetorical style traits, so that arguments can be logical or rely on rhetorical techniques.
+**User Story:** As a user, I want debaters to exhibit varying rhetorical styles, so that arguments can be logical or rely on rhetorical techniques.
 
 #### Acceptance Criteria
 
@@ -108,19 +98,20 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHERE a debater has moderate rhetoric usage THEN the Debate System SHALL instruct the debater to blend logic with persuasive elements
 4. WHEN rhetoric usage is specified THEN the Debate System SHALL include examples of acceptable rhetorical techniques in the system prompt
 
-### Requirement 9
+### Requirement 8
 
-**User Story:** As a user, I want debaters to employ specific debate tactics, so that I can observe various argumentation strategies.
+**User Story:** As a user, I want debaters to employ various debate tactics, so that I can observe diverse argumentation strategies.
 
 #### Acceptance Criteria
 
-1. WHERE a debater is configured to use Gish gallop THEN the Debate System SHALL instruct the debater to present multiple arguments rapidly
-2. WHERE a debater is configured to use strawman tactics THEN the Debate System SHALL instruct the debater to misrepresent opposing arguments before refuting them
-3. WHERE a debater is configured to use appeal to emotion THEN the Debate System SHALL instruct the debater to emphasize emotional impact over logic
-4. WHERE a debater is configured to use ad hominem THEN the Debate System SHALL instruct the debater to attack the opponent's character or credibility
-5. WHERE a debater is configured to avoid fallacies THEN the Debate System SHALL instruct the debater to use only valid logical arguments
+1. WHEN personality profiles are generated THEN the Debate System SHALL randomly assign debate tactics to debaters
+2. WHERE a debater is assigned Gish gallop THEN the Debate System SHALL instruct the debater to present multiple arguments rapidly
+3. WHERE a debater is assigned strawman tactics THEN the Debate System SHALL instruct the debater to misrepresent opposing arguments before refuting them
+4. WHERE a debater is assigned appeal to emotion THEN the Debate System SHALL instruct the debater to emphasize emotional impact over logic
+5. WHERE a debater is assigned ad hominem THEN the Debate System SHALL instruct the debater to attack the opponent's character or credibility
+6. WHERE a debater is assigned no fallacious tactics THEN the Debate System SHALL instruct the debater to use only valid logical arguments
 
-### Requirement 10
+### Requirement 9
 
 **User Story:** As a user, I want the moderator to identify and call out debate tactics and fallacies, so that I can understand when debaters use questionable techniques.
 
@@ -131,29 +122,18 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHEN the moderator identifies a fallacy or tactic THEN the Debate System SHALL include the identification in the moderator's commentary
 4. WHEN displaying moderator commentary THEN the Debate System SHALL clearly distinguish between rule violations and tactical observations
 
-### Requirement 11
+### Requirement 10
 
-**User Story:** As a user, I want to save and reuse personality profiles, so that I can create consistent debater personas across multiple debates.
-
-#### Acceptance Criteria
-
-1. WHEN a user creates a personality profile THEN the Debate System SHALL allow the user to save the profile with a name
-2. WHEN a user starts a new debate THEN the Debate System SHALL allow the user to select from saved personality profiles
-3. WHEN a saved profile is loaded THEN the Debate System SHALL apply all trait values from the saved profile
-4. WHEN a user requests to list profiles THEN the Debate System SHALL display all saved personality profiles with their trait values
-
-### Requirement 12
-
-**User Story:** As a user, I want personality traits to influence debate behavior consistently, so that the debater's style is maintained throughout the debate.
+**User Story:** As a user, I want personality traits to influence debate behavior consistently, so that each debater's style is maintained throughout the debate.
 
 #### Acceptance Criteria
 
-1. WHEN a personality profile is applied THEN the Debate System SHALL include personality instructions in every prompt to that debater
+1. WHEN a personality profile is generated THEN the Debate System SHALL include personality instructions in every prompt to that debater
 2. WHEN a debater generates statements across multiple rounds THEN the Debate System SHALL maintain consistent personality traits
 3. WHEN context is built for a debater THEN the Debate System SHALL include reminders of the debater's personality profile
-4. WHEN a debate concludes THEN the Debate System SHALL include personality profiles in the transcript metadata
+4. WHEN a debate concludes THEN the Debate System SHALL NOT include personality trait values in the transcript or any user-visible output
 
-### Requirement 13
+### Requirement 11
 
 **User Story:** As a user, I want to configure moderator strictness, so that I can control how aggressively the moderator enforces rules.
 
@@ -164,7 +144,7 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHERE the moderator has moderate strictness THEN the Debate System SHALL instruct the moderator to balance enforcement with debate flow
 4. WHEN moderator strictness is configured THEN the Debate System SHALL include strictness guidelines in the moderator's system prompt
 
-### Requirement 14
+### Requirement 12
 
 **User Story:** As a user, I want the moderator to provide insightful commentary, so that I can better understand the quality and effectiveness of arguments.
 
@@ -175,7 +155,7 @@ This specification extends the base AI Debate System with advanced features incl
 3. WHEN the moderator provides round commentary THEN the Debate System SHALL prompt the moderator to note missed opportunities
 4. WHEN the debate concludes THEN the Debate System SHALL prompt the moderator to provide an overall assessment of both debaters' performance
 
-### Requirement 15
+### Requirement 13
 
 **User Story:** As a user, I want to disable the moderator for simpler debates, so that I can choose between moderated and unmoderated formats.
 

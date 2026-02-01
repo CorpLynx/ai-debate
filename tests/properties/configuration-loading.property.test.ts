@@ -89,22 +89,22 @@ describe('Configuration Loading Properties', () => {
           const result = configManager.loadAndMerge({}, tempConfigPath);
 
           // Check each parameter
-          const keys: Array<keyof DebateConfig> = [
+          const keys = [
             'timeLimit',
             'wordLimit',
             'strictMode',
             'showPreparation',
             'numCrossExamQuestions',
             'preparationTime'
-          ];
+          ] as const;
 
           for (const key of keys) {
-            if (partialConfig[key] === undefined) {
+            if ((partialConfig as any)[key] === undefined) {
               // Missing parameter should use default
               expect(result.config[key]).toBe(DEFAULT_CONFIG[key]);
             } else {
               // Present parameter should use provided value
-              expect(result.config[key]).toBe(partialConfig[key]);
+              expect(result.config[key]).toBe((partialConfig as any)[key]);
             }
           }
 

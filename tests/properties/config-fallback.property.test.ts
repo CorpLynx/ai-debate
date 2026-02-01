@@ -63,9 +63,13 @@ describe('Configuration Fallback Properties', () => {
         (userConfig) => {
           const result = configManager.mergeAndValidate(userConfig);
 
-          // Check each parameter
-          for (const key of Object.keys(userConfig) as Array<keyof DebateConfig>) {
-            const value = userConfig[key];
+          // Check each parameter that was provided
+          const testableKeys = ['timeLimit', 'wordLimit', 'strictMode', 'showPreparation', 'numCrossExamQuestions', 'preparationTime'] as const;
+          
+          for (const key of testableKeys) {
+            if (!(key in userConfig)) continue;
+            
+            const value = (userConfig as any)[key];
             
             if (value === undefined) {
               // Undefined values should use defaults
@@ -140,8 +144,10 @@ describe('Configuration Fallback Properties', () => {
           expect(result.warnings).toHaveLength(0);
           expect(result.invalidParams).toHaveLength(0);
           
-          // Config should match input
-          expect(result.config).toEqual(validConfig);
+          // Config should match input for the provided fields
+          for (const key of Object.keys(validConfig) as Array<keyof typeof validConfig>) {
+            expect(result.config[key]).toBe(validConfig[key]);
+          }
           
           return true;
         }

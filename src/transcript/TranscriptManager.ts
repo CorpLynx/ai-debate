@@ -499,6 +499,8 @@ export class TranscriptManagerImpl implements TranscriptManager {
         config: transcript.debate.config,
         affirmativeModelName: transcript.debate.affirmativeModel.getModelName(),
         negativeModelName: transcript.debate.negativeModel.getModelName(),
+        affirmativePersonality: transcript.debate.affirmativePersonality,
+        negativePersonality: transcript.debate.negativePersonality,
         state: transcript.debate.state,
         rounds: transcript.debate.rounds.map(round => ({
           type: round.type,
@@ -551,6 +553,8 @@ export class TranscriptManagerImpl implements TranscriptManager {
         config: serialized.debate.config,
         affirmativeModel: mockAffirmativeProvider,
         negativeModel: mockNegativeProvider,
+        affirmativePersonality: serialized.debate.affirmativePersonality,
+        negativePersonality: serialized.debate.negativePersonality,
         state: serialized.debate.state,
         rounds: serialized.debate.rounds.map((round: any) => ({
           type: round.type,
